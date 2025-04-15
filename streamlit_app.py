@@ -135,7 +135,7 @@ if uploaded_file:
             pdf.set_font("Arial", size=10)
             pdf.cell(200, 10, txt=title, ln=True, align="C")
             pdf.ln(10)
-            headers = ["référence fournisseur", "référence produit", "désignation", "qté à commander"]
+            headers = ["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]
             col_widths = [40, 40, 70, 40]
             for h in headers:
                 pdf.cell(col_widths[headers.index(h)], 10, h, border=1)
