@@ -2,16 +2,19 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from fpdf import FPDF
 from io import BytesIO
+import tempfile
 
-st.set_page_config(page_title="Forecast - Refonte", layout="wide")
-st.title("📦 Application Forecast (Version Refonte)")
+st.set_page_config(page_title="Forecast de commandes", layout="wide")
+st.title("📦 Forecast de commandes")
 
-# Authentification simple
+# Authentification
 PASSWORD = "forecast2024"
 if "authenticated" not in st.session_state:
-    password = st.text_input("🔐 Mot de passe", type="password")
-    if password == PASSWORD:
+    pwd = st.text_input("🔐 Mot de passe", type="password")
+    if pwd == PASSWORD:
         st.session_state.authenticated = True
     else:
         st.stop()
@@ -23,157 +26,140 @@ if uploaded_file:
         df = pd.read_excel(uploaded_file)
         df.columns = df.columns.str.strip().str.lower().str.replace("’", "'")
 
-        required_columns = ["référence fournisseur", "référence produit", "désignation",
-                            "tarif d'achat", "conditionnement", "stock"]
+        required_columns = ["référence fournisseur", "référence produit", "désignation", "tarif d'achat", "conditionnement", "stock"]
         missing = [col for col in required_columns if col not in df.columns]
         if missing:
             st.error(f"❌ Colonnes manquantes : {missing}")
             st.stop()
 
-        
-# Colonnes de mois - détection souple
-        # Conversion automatique des colonnes numériques
-        df["tarif d'achat"] = pd.to_numeric(df["tarif d'achat"], errors="coerce").fillna(0)
-        df["conditionnement"] = pd.to_numeric(df["conditionnement"], errors="coerce").replace(0, 1)
-        df["stock"] = pd.to_numeric(df["stock"], errors="coerce").replace(0, 1)
-    
         mois_possibles = {
             "1": "janvier", "2": "février", "3": "mars", "4": "avril",
             "5": "mai", "6": "juin", "7": "juillet", "8": "août",
             "9": "septembre", "10": "octobre", "11": "novembre", "12": "décembre"
         }
-
         month_columns = []
-        for key, val in mois_possibles.items():
-            if key in df.columns:
-                month_columns.append(key)
-            elif val in df.columns:
-                month_columns.append(val)
+        for k, v in mois_possibles.items():
+            if k in df.columns:
+                month_columns.append(k)
+            elif v in df.columns:
+                month_columns.append(v)
 
         if len(month_columns) != 12:
-            st.error("❌ 12 colonnes de mois attendues (chiffres ou noms de mois en français).")
+            st.error("❌ 12 colonnes de mois attendues.")
             st.stop()
 
         st.success("✅ Données chargées")
-        st.dataframe(df.head())
+        progression = st.slider("📈 Progression (%)", -100, 200, 10)
+        use_objectif = st.checkbox("🎯 Activer un objectif d'achat ?")
+        objectif_global = st.number_input("💰 Objectif total (€)", value=0.0, step=1000.0) if use_objectif else None
 
-        # Simulation 1 : Progression %
-        st.subheader("📈 Simulation par pourcentage de progression")
-        progression = st.slider("Progression (%)", -100, 200, 10)
+        for col in ["tarif d'achat", "conditionnement", "stock"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).replace(0, 1)
 
         df_sim1 = df.copy()
         df_sim1[month_columns] = (df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)).clip(lower=0)
         for col in month_columns:
-            df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round().astype(int) * df_sim1["conditionnement"]
+            df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round() * df_sim1["conditionnement"]
 
         df_sim1["Montant annuel"] = df_sim1[month_columns].sum(axis=1) * df_sim1["tarif d'achat"]
-        df_sim1["Taux de rotation"] = df_sim1[month_columns].sum(axis=1) / df_sim1["stock"]
+        df_sim1["Taux de rotation"] = (df_sim1[month_columns].sum(axis=1) / df_sim1["stock"]).round(2)
 
-        # Simulation 2 : Objectif montant annuel
-        st.subheader("🎯 Simulation par objectif d’achat")
-        use_objectif = st.checkbox("Activer cette simulation")
-        objectif_global = None
-        df_sim2 = None
+        remarques_sim1 = []
+        for idx, row in df_sim1.iterrows():
+            taux = row["Taux de rotation"]
+            if taux < 0.5:
+                df_sim1.loc[idx, month_columns] *= 0.7
+                remarques_sim1.append("Quantité réduite : taux < 0.5")
+            elif taux > 4:
+                df_sim1.loc[idx, month_columns] *= 1.2
+                remarques_sim1.append("Quantité augmentée : taux > 4")
+            else:
+                remarques_sim1.append("")
+        df_sim1["Remarque"] = remarques_sim1
 
-        if use_objectif:
-            objectif_global = st.number_input("Objectif de montant total (€)", min_value=0.0, step=1000.0)
-            total_actuel = df_sim1["Montant annuel"].sum()
-            coef = objectif_global / total_actuel if total_actuel > 0 else 1
+        df_sim2 = df.copy()
+        df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
+        if use_objectif and objectif_global:
+            montant_actuel = (df_sim1[month_columns].sum(axis=1) * df_sim1["tarif d'achat"]).sum()
+            coef = objectif_global / montant_actuel if montant_actuel > 0 else 1
+            df_sim2[month_columns] = (df_sim2[month_columns] * coef).clip(lower=0)
+        for col in month_columns:
+            df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round() * df_sim2["conditionnement"]
 
-            df_sim2 = df.copy()
-            df_sim2[month_columns] = (df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * coef).clip(lower=0)
-            for col in month_columns:
-                df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round().astype(int) * df_sim2["conditionnement"]
+        df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
+        df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).round(2)
 
-            df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
-            df_sim2["Taux de rotation"] = df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]
+        remarques_sim2 = []
+        for idx, row in df_sim2.iterrows():
+            taux = row["Taux de rotation"]
+            if taux < 0.5:
+                df_sim2.loc[idx, month_columns] *= 0.7
+                remarques_sim2.append("Quantité réduite : taux < 0.5")
+            elif taux > 4:
+                df_sim2.loc[idx, month_columns] *= 1.2
+                remarques_sim2.append("Quantité augmentée : taux > 4")
+            else:
+                remarques_sim2.append("")
+        df_sim2["Remarque"] = remarques_sim2
 
-        # Comparatif
-        if use_objectif:
-            st.subheader("🔍 Comparatif des simulations")
-            comparatif = df[["référence produit", "désignation"]].copy()
-            comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
-            comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
-            comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
-            st.dataframe(comparatif)
+        comparatif = df[["référence produit", "désignation"]].copy()
+        comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
+        comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
+        comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
+        st.subheader("🔍 Comparatif")
+        st.dataframe(comparatif)
 
-        
+        st.subheader("📊 Graphique produit")
+        produit = st.selectbox("Produit à afficher", df["référence produit"].unique())
+        if produit:
+            data_plot = pd.DataFrame({
+                "Mois": month_columns * 2,
+                "Quantité": list(df_sim1[df_sim1["référence produit"] == produit][month_columns].values[0]) +
+                            list(df_sim2[df_sim2["référence produit"] == produit][month_columns].values[0]),
+                "Simulation": ["Simulation 1"] * len(month_columns) + ["Simulation 2"] * len(month_columns)
+            })
+            fig, ax = plt.subplots()
+            for sim in data_plot["Simulation"].unique():
+                sub = data_plot[data_plot["Simulation"] == sim]
+                ax.plot(sub["Mois"], sub["Quantité"], label=sim, marker='o')
+            ax.legend()
+            st.pyplot(fig)
 
-# 🔍 Analyse graphique + comparatif + export PDF
-import matplotlib.pyplot as plt
-from fpdf import FPDF
-import tempfile
-import os
+        def create_pdf(df_export, title):
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt=title, ln=True, align="C")
+            pdf.ln(10)
+            headers = ["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]
+            col_widths = [40, 40, 70, 40]
+            for h in headers:
+                pdf.cell(col_widths[headers.index(h)], 10, h, border=1)
+            pdf.ln()
+            for _, row in df_export.iterrows():
+                for h in headers:
+                    val = str(row[h])[:30]
+                    pdf.cell(col_widths[headers.index(h)], 10, val, border=1)
+                pdf.ln()
+            temp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+            pdf.output(temp.name)
+            return temp.name
 
-# 🔹 Graphique comparatif
-st.subheader("📉 Visualisation graphique d’un produit")
-produit = st.selectbox("Sélectionner un produit", df_sim1["référence produit"].unique())
-if produit:
-    df_plot = pd.DataFrame({
-        "mois": month_columns * 2,
-        "quantité": list(df_sim1[df_sim1["référence produit"] == produit][month_columns].values[0]) +
-                    list(df_sim2[df_sim2["référence produit"] == produit][month_columns].values[0]),
-        "simulation": ["Simulation 1"] * len(month_columns) + ["Simulation 2"] * len(month_columns)
-    })
-    fig, ax = plt.subplots()
-    for label in df_plot["simulation"].unique():
-        ax.plot(df_plot[df_plot["simulation"] == label]["mois"],
-                df_plot[df_plot["simulation"] == label]["quantité"],
-                marker='o', label=label)
-    ax.set_title(f"Comparaison des quantités pour {produit}")
-    ax.set_xlabel("Mois")
-    ax.set_ylabel("Quantité")
-    ax.legend()
-    st.pyplot(fig)
+        st.subheader("📄 Bons de commande (PDF)")
+        for label, dfx in [("Simulation 1", df_sim1), ("Simulation 2", df_sim2)]:
+            df_bon = dfx[["référence fournisseur", "référence produit", "désignation"]].copy()
+            df_bon["quantité totale à commander"] = dfx[month_columns].sum(axis=1).astype(int)
+            file = create_pdf(df_bon, f"Bon de commande - {label}")
+            with open(file, "rb") as f:
+                st.download_button(f"Télécharger le PDF - {label}", f.read(), file_name=f"bon_commande_{label.replace(' ', '_')}.pdf")
 
-# 🔹 Bons de commande PDF
-def export_pdf(df_bon, titre):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=titre, ln=True, align="C")
-    pdf.ln(10)
-
-    col_widths = [40, 40, 70, 30]
-    headers = ["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]
-    for h in headers:
-        pdf.cell(col_widths[headers.index(h)], 10, h, border=1)
-    pdf.ln()
-    for _, row in df_bon.iterrows():
-        for h in headers:
-            val = str(row[h])[:30]
-            pdf.cell(col_widths[headers.index(h)], 10, val, border=1)
-        pdf.ln()
-
-    file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(file.name)
-    return file.name
-
-st.subheader("📄 Bons de commande PDF")
-for label, df_sim in [("Simulation 1", df_sim1), ("Simulation 2", df_sim2)]:
-    df_bon = df_sim[["référence fournisseur", "référence produit", "désignation"]].copy()
-    df_bon["quantité totale à commander"] = df_sim[month_columns].sum(axis=1).astype(int)
-    file_path = export_pdf(df_bon, f"Bon de commande - {label}")
-    with open(file_path, "rb") as f:
-        st.download_button(f"Télécharger le PDF - {label}", f.read(), file_name=f"bon_commande_{label.replace(' ', '_')}.pdf")
-
-
-
-# Export Excel
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df_sim1.to_excel(writer, index=False, sheet_name="Simulation_Progression")
-            if use_objectif and df_sim2 is not None:
-                df_sim2.to_excel(writer, index=False, sheet_name="Simulation_Objectif")
-                comparatif.to_excel(writer, index=False, sheet_name="Comparatif")
+            df_sim1.to_excel(writer, sheet_name="Simulation_Progression", index=False)
+            df_sim2.to_excel(writer, sheet_name="Simulation_Objectif", index=False)
+            comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         output.seek(0)
-
-        st.download_button(
-            label="📥 Télécharger le fichier Excel",
-            data=output,
-            file_name="forecast_resultat.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        st.download_button("📥 Télécharger Excel complet", data=output, file_name="forecast_complet.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     except Exception as e:
-        st.error(f"Erreur de traitement : {e}")
+        st.error(f"Erreur : {e}")
