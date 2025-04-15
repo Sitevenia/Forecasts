@@ -60,6 +60,7 @@ if uploaded_file:
         df_sim1[month_columns] = (df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)).clip(lower=0)
         for col in month_columns:
             df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round() * df_sim1["conditionnement"]
+            df_sim1[month_columns] = df_sim1[month_columns].round().astype(int)
 
         df_sim1["Montant annuel"] = df_sim1[month_columns].sum(axis=1) * df_sim1["tarif d'achat"]
         df_sim1["Taux de rotation"] = (df_sim1[month_columns].sum(axis=1) / df_sim1["stock"]).round(2)
@@ -86,6 +87,7 @@ if uploaded_file:
             df_sim2[month_columns] = (df_sim2[month_columns] * coef).clip(lower=0)
         for col in month_columns:
             df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round() * df_sim2["conditionnement"]
+            df_sim2[month_columns] = df_sim2[month_columns].round().astype(int)
 
         df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
         df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).round(2)
