@@ -26,10 +26,10 @@ if uploaded_file:
         required_columns = ["référence fournisseur", "référence produit", "désignation",
                             "tarif d'achat", "conditionnement", "stock"]
         missing = [col for col in required_columns if col not in df.columns]
+        missing = [col for col in required_columns if col not in df.columns]
         if missing:
-    except Exception as e:
-        st.error(f"Erreur de traitement : {e}")
             st.error(f"❌ Colonnes manquantes : {missing}")
+            st.stop()
             st.stop()
 
         
