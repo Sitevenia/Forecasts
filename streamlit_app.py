@@ -88,7 +88,17 @@ if uploaded_file:
             df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
             df_sim2["Taux de rotation"] = df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]
 
-        # Comparatif
+        
+    # Comparatif
+    comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
+    comparatif = comparatif.rename(columns={col: f"{col} (sim1)" for col in month_columns})
+
+    for col in month_columns:
+        comparatif[f"{col} (sim2)"] = df_sim2[col]
+        comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
+
+    comparatif["écart total"] = df_sim2[month_columns].sum(axis=1) - df_sim1[month_columns].sum(axis=1)
+
         if use_objectif:
             st.subheader("🔍 Comparatif des simulations")
             comparatif = df[["référence produit", "désignation"]].copy()
@@ -97,7 +107,35 @@ if uploaded_file:
             comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
             st.dataframe(comparatif)
 
-        # Export Excel
+        
+    # Affichage graphique
+    st.subheader("Analyse graphique")
+
+    produit_selectionne = st.selectbox("Sélectionner un produit pour visualisation", df_sim1["référence produit"].unique())
+
+    if produit_selectionne:
+        data_graph = pd.DataFrame({
+            "Mois": month_columns * 2,
+            "Quantité": list(df_sim1[df_sim1["référence produit"] == produit_selectionne][month_columns].values[0]) + list(df_sim2[df_sim2["référence produit"] == produit_selectionne][month_columns].values[0]),
+            "Simulation": ["Simulation 1"] * len(month_columns) + ["Simulation 2"] * len(month_columns)
+        })
+        st.line_chart(data_graph.pivot(index="Mois", columns="Simulation", values="Quantité"))
+
+    # Génération des bons de commande
+    st.subheader("Bon de commande - Simulation 1")
+    bon_commande_1 = df_sim1[["référence fournisseur", "référence produit", "désignation"] + month_columns]
+    bon_commande_1["quantité totale à commander"] = df_sim1[month_columns].sum(axis=1).astype(int)
+    bon_commande_1 = bon_commande_1[["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]]
+    st.dataframe(bon_commande_1)
+
+    st.subheader("Bon de commande - Simulation 2")
+    bon_commande_2 = df_sim2[["référence fournisseur", "référence produit", "désignation"] + month_columns]
+    bon_commande_2["quantité totale à commander"] = df_sim2[month_columns].sum(axis=1).astype(int)
+    bon_commande_2 = bon_commande_2[["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]]
+    st.dataframe(bon_commande_2)
+
+
+# Export Excel
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df_sim1.to_excel(writer, index=False, sheet_name="Simulation_Progression")
