@@ -57,7 +57,7 @@ if uploaded_file:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).replace(0, 1)
 
         df_sim1 = df.copy()
-        df_sim1[month_columns] = (df_sim1[month_columns].round().astype(int).apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)).clip(lower=0)
+        df_sim1[month_columns] = (df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)).clip(lower=0)
         for col in month_columns:
             df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round() * df_sim1["conditionnement"]
 
@@ -78,7 +78,7 @@ if uploaded_file:
         df_sim1["Remarque"] = remarques_sim1
 
         df_sim2 = df.copy()
-        df_sim2[month_columns] = df_sim2[month_columns].round().astype(int).apply(pd.to_numeric, errors='coerce').fillna(0)
+        df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
         if use_objectif and objectif_global:
             montant_actuel = (df_sim1[month_columns].sum(axis=1) * df_sim1["tarif d'achat"]).sum()
             coef = objectif_global / montant_actuel if montant_actuel > 0 else 1
@@ -103,7 +103,9 @@ if uploaded_file:
         df_sim2["Remarque"] = remarques_sim2
 
         comparatif = df[["référence produit", "désignation"]].copy()
+        comparatif["Qté Sim 1"] = df_sim1[month_columns]
         comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
+        comparatif["Qté Sim 2"] = df_sim2[month_columns]
         comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
         comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
         st.subheader("🔍 Comparatif")
