@@ -30,10 +30,22 @@ if uploaded_file:
             st.error(f"❌ Colonnes manquantes : {missing}")
             st.stop()
 
-        # Colonnes de mois (1 à 12)
-        month_columns = [col for col in df.columns if col in [str(i) for i in range(1, 13)]]
+       # Colonnes de mois - détection souple
+        mois_possibles = {
+            "1": "janvier", "2": "février", "3": "mars", "4": "avril",
+            "5": "mai", "6": "juin", "7": "juillet", "8": "août",
+            "9": "septembre", "10": "octobre", "11": "novembre", "12": "décembre"
+        }
+
+        month_columns = []
+        for key, val in mois_possibles.items():
+            if key in df.columns:
+                month_columns.append(key)
+            elif val in df.columns:
+                month_columns.append(val)
+
         if len(month_columns) != 12:
-            st.error("❌ 12 colonnes de mois attendues (1 à 12)")
+            st.error("❌ 12 colonnes de mois attendues (chiffres ou noms de mois en français).")
             st.stop()
 
         st.success("✅ Données chargées")
