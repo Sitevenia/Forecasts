@@ -30,7 +30,13 @@ if uploaded_file:
             st.error(f"❌ Colonnes manquantes : {missing}")
             st.stop()
 
-       # Colonnes de mois - détection souple
+        
+# Colonnes de mois - détection souple
+        # Conversion automatique des colonnes numériques
+        df["tarif d'achat"] = pd.to_numeric(df["tarif d'achat"], errors="coerce").fillna(0)
+        df["conditionnement"] = pd.to_numeric(df["conditionnement"], errors="coerce").replace(0, 1)
+        df["stock"] = pd.to_numeric(df["stock"], errors="coerce").replace(0, 1)
+    
         mois_possibles = {
             "1": "janvier", "2": "février", "3": "mars", "4": "avril",
             "5": "mai", "6": "juin", "7": "juillet", "8": "août",
@@ -56,7 +62,7 @@ if uploaded_file:
         progression = st.slider("Progression (%)", -100, 200, 10)
 
         df_sim1 = df.copy()
-        df_sim1[month_columns] = df_sim1[month_columns].apply(lambda row: row * (1 + progression / 100))
+        df_sim1[month_columns] = df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)
         for col in month_columns:
             df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round().astype(int) * df_sim1["conditionnement"]
 
@@ -75,7 +81,7 @@ if uploaded_file:
             coef = objectif_global / total_actuel if total_actuel > 0 else 1
 
             df_sim2 = df.copy()
-            df_sim2[month_columns] = df_sim2[month_columns].apply(lambda row: row * coef)
+            df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * coef
             for col in month_columns:
                 df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round().astype(int) * df_sim2["conditionnement"]
 
