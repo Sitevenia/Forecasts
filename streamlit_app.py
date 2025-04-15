@@ -89,7 +89,7 @@ if uploaded_file:
 
         df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
         df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).round(2)
-        df_sim2["Qté Sim2"] = df_sim2[month_columns].sum(axis=1)
+        df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
 
         remarques_sim2 = []
         for idx, row in df_sim2.iterrows():
