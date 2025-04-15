@@ -81,7 +81,7 @@ if uploaded_file:
             coef = objectif_global / total_actuel if total_actuel > 0 else 1
 
             df_sim2 = df.copy()
-            df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * coef).clip(lower=0
+            df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * coef.clip(lower=0)
             for col in month_columns:
                 df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round().astype(int) * df_sim2["conditionnement"]
 
