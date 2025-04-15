@@ -62,7 +62,7 @@ if uploaded_file:
         progression = st.slider("Progression (%)", -100, 200, 10)
 
         df_sim1 = df.copy()
-        df_sim1[month_columns] = df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100)).clip(lower=0
+        df_sim1[month_columns] = df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0) * (1 + progression / 100).clip(lower=0)
         for col in month_columns:
             df_sim1[col] = (df_sim1[col] / df_sim1["conditionnement"]).round().astype(int) * df_sim1["conditionnement"]
 
