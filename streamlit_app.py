@@ -2,65 +2,84 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import io
 
-st.set_page_config(page_title="Forecast mensuel", layout="wide")
+st.set_page_config(page_title="Forecast de Commandes", layout="wide")
 
-st.title("📈 Application de Forecast mensuel")
+st.title("📦 Application de Forecast de Commandes")
 
+# Upload du fichier
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
-if uploaded_file:
+if uploaded_file is not None:
     try:
         df = pd.read_excel(uploaded_file)
-        required_columns = [
-            "référence fournisseur", "référence produit", "désignation", "stock",
-            "prix d’achat", "conditionnement"
-        ]
-        month_columns = [col for col in df.columns if any(str(i) in col.lower() for i in ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"])]
+        
+        # Colonnes attendues de base
+        required_columns = ["référence fournisseur", "référence produit", "désignation", "stock", "prix d’achat", "conditionnement"]
+        month_columns = [col for col in df.columns if str(col).strip().lower() in [f"mois {i}" for i in range(1, 13)]]
+
         if not all(col in df.columns for col in required_columns) or len(month_columns) != 12:
-            st.error("❌ Certaines colonnes obligatoires sont manquantes.")
+            st.error("❌ Le fichier doit contenir les colonnes : référence fournisseur, référence produit, désignation, stock, prix d’achat, conditionnement + 12 mois (mois 1 à mois 12).")
         else:
-            progression = st.slider("📊 Pourcentage de progression (%)", -50, 100, 10)
-            objectif = st.number_input("🎯 Objectif global d'achat (€)", min_value=0.0, value=0.0, step=100.0)
-            use_objectif = st.checkbox("✅ Utiliser l’objectif global d’achat")
+            st.success("✅ Fichier chargé avec succès.")
 
+            # Sélection du pourcentage de progression
+            progression = st.slider("📈 Pourcentage de progression annuel (%)", min_value=-100, max_value=300, value=0)
+
+            # Objectif d'achat (optionnel)
+            use_objectif = st.checkbox("🎯 Utiliser un objectif de montant global d'achat ?")
+            objectif_achat = None
+            if use_objectif:
+                objectif_achat = st.number_input("💰 Objectif d’achat annuel (€)", min_value=0.0, step=1000.0)
+
+            # Conversion colonnes mois en numérique
+            df[month_columns] = df[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
+            df["stock"] = pd.to_numeric(df["stock"], errors='coerce').fillna(0)
+            df["prix d’achat"] = pd.to_numeric(df["prix d’achat"], errors='coerce').fillna(0)
+            df["conditionnement"] = pd.to_numeric(df["conditionnement"], errors='coerce').fillna(1)
+
+            # Simulation 1 : progression + tendance
             df_sim1 = df.copy()
-            df_sim1[month_columns] = (
-                df_sim1[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
-                * (1 + progression / 100)
-            ).clip(lower=0)
+            trend_ratio = df[month_columns[-4:]].sum(axis=1) / df[month_columns[:4]].sum(axis=1).replace(0, np.nan)
+            trend_ratio = trend_ratio.fillna(1).clip(0.5, 1.5)
 
-            df_sim1["montant"] = df_sim1[month_columns].sum(axis=1) * df_sim1["prix d’achat"]
-            df_sim1["taux de rotation"] = ((df_sim1[month_columns].sum(axis=1) / df_sim1["stock"])
-                                            .replace([np.inf, -np.inf], np.nan).fillna(0).round(2))
+            df_sim1[month_columns] = (df[month_columns] * (1 + progression / 100) * trend_ratio[:, None]).clip(lower=0)
 
+            # Simulation 2 : ajustement pour atteindre objectif global
             df_sim2 = df_sim1.copy()
+            if use_objectif and objectif_achat:
+                montant_total = (df_sim2[month_columns].sum(axis=1) * df_sim2["prix d’achat"]).sum()
+                facteur_ajustement = objectif_achat / montant_total if montant_total > 0 else 1
+                df_sim2[month_columns] = (df_sim2[month_columns] * facteur_ajustement).clip(lower=0)
 
-            if use_objectif and objectif > 0:
-                montant_total = df_sim1["montant"].sum()
-                if montant_total > 0:
-                    ajustement = objectif / montant_total
-                    df_sim2[month_columns] = (df_sim2[month_columns] * ajustement).round()
-                    df_sim2["montant"] = df_sim2[month_columns].sum(axis=1) * df_sim2["prix d’achat"]
-                    df_sim2["ajustement"] = "Ajusté pour atteindre l’objectif"
-                else:
-                    df_sim2["ajustement"] = "Montant initial nul"
-            else:
-                df_sim2["ajustement"] = "Non ajusté (objectif non utilisé)"
+            # Ajustement au conditionnement
+            for df_temp in [df_sim1, df_sim2]:
+                for col in month_columns:
+                    df_temp[col] = (df_temp[col] / df_temp["conditionnement"]).round().clip(lower=0) * df_temp["conditionnement"]
+
+            # Calcul taux de rotation = conso annuelle / stock
+            for df_temp in [df_sim1, df_sim2]:
+                df_temp["taux rotation"] = (df_temp[month_columns].sum(axis=1) / df_temp["stock"]).replace([np.inf, -np.inf], 0).fillna(0).round(2)
 
             # Comparatif
-            try:
-                comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
-                comparatif = comparatif.rename(columns={col: f"{col} (sim1)" for col in month_columns})
+            comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation"] + month_columns].copy()
+            comparatif.columns = ["référence fournisseur", "référence produit", "désignation"] + [f"Simu1 - Mois {i+1}" for i in range(12)]
+            for i, col in enumerate(month_columns):
+                comparatif[f"Simu2 - Mois {i+1}"] = df_sim2[col]
+                comparatif[f"Écart Mois {i+1}"] = df_sim2[col] - df_sim1[col]
 
-                for col in month_columns:
-                    comparatif[f"{col} (sim2)"] = df_sim2[col]
-                    comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
+            # Export
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+                df_sim1.to_excel(writer, sheet_name="Simulation 1", index=False)
+                df_sim2.to_excel(writer, sheet_name="Simulation 2", index=False)
+                comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+            st.download_button("📤 Télécharger les résultats", buffer.getvalue(), file_name="forecast_resultats.xlsx")
 
-                st.dataframe(comparatif)
-            except Exception as e:
-                st.error(f"Erreur dans le comparatif : {e}")
+            # Aperçus
+            st.subheader("📊 Aperçu des résultats")
+            st.dataframe(comparatif.head(20))
+
     except Exception as e:
         st.error(f"Erreur de traitement : {e}")
-else:
-    st.info("Veuillez charger un fichier Excel pour commencer.")
