@@ -97,7 +97,69 @@ if uploaded_file:
             comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
             st.dataframe(comparatif)
 
-        # Export Excel
+        
+
+# 🔍 Analyse graphique + comparatif + export PDF
+import matplotlib.pyplot as plt
+from fpdf import FPDF
+import tempfile
+import os
+
+# 🔹 Graphique comparatif
+st.subheader("📉 Visualisation graphique d’un produit")
+produit = st.selectbox("Sélectionner un produit", df_sim1["référence produit"].unique())
+if produit:
+    df_plot = pd.DataFrame({
+        "mois": month_columns * 2,
+        "quantité": list(df_sim1[df_sim1["référence produit"] == produit][month_columns].values[0]) +
+                    list(df_sim2[df_sim2["référence produit"] == produit][month_columns].values[0]),
+        "simulation": ["Simulation 1"] * len(month_columns) + ["Simulation 2"] * len(month_columns)
+    })
+    fig, ax = plt.subplots()
+    for label in df_plot["simulation"].unique():
+        ax.plot(df_plot[df_plot["simulation"] == label]["mois"],
+                df_plot[df_plot["simulation"] == label]["quantité"],
+                marker='o', label=label)
+    ax.set_title(f"Comparaison des quantités pour {produit}")
+    ax.set_xlabel("Mois")
+    ax.set_ylabel("Quantité")
+    ax.legend()
+    st.pyplot(fig)
+
+# 🔹 Bons de commande PDF
+def export_pdf(df_bon, titre):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=titre, ln=True, align="C")
+    pdf.ln(10)
+
+    col_widths = [40, 40, 70, 30]
+    headers = ["référence fournisseur", "référence produit", "désignation", "quantité totale à commander"]
+    for h in headers:
+        pdf.cell(col_widths[headers.index(h)], 10, h, border=1)
+    pdf.ln()
+    for _, row in df_bon.iterrows():
+        for h in headers:
+            val = str(row[h])[:30]
+            pdf.cell(col_widths[headers.index(h)], 10, val, border=1)
+        pdf.ln()
+
+    file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    pdf.output(file.name)
+    return file.name
+
+st.subheader("📄 Bons de commande PDF")
+for label, df_sim in [("Simulation 1", df_sim1), ("Simulation 2", df_sim2)]:
+    df_bon = df_sim[["référence fournisseur", "référence produit", "désignation"]].copy()
+    df_bon["quantité totale à commander"] = df_sim[month_columns].sum(axis=1).astype(int)
+    file_path = export_pdf(df_bon, f"Bon de commande - {label}")
+    with open(file_path, "rb") as f:
+        st.download_button(f"Télécharger le PDF - {label}", f.read(), file_name=f"bon_commande_{label.replace(' ', '_')}.pdf")
+
+
+
+# Export Excel
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df_sim1.to_excel(writer, index=False, sheet_name="Simulation_Progression")
