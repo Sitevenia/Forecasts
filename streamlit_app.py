@@ -14,6 +14,7 @@ if "authenticated" not in st.session_state:
     if password == PASSWORD:
         st.session_state.authenticated = True
     else:
+        st.stop()
 
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
@@ -26,10 +27,10 @@ if uploaded_file:
                             "tarif d'achat", "conditionnement", "stock"]
         missing = [col for col in required_columns if col not in df.columns]
         if missing:
-            st.error(f"❌ Colonnes manquantes : {missing}")
-            st.stop()
     except Exception as e:
         st.error(f"Erreur de traitement : {e}")
+            st.error(f"❌ Colonnes manquantes : {missing}")
+            st.stop()
 
         
 # Colonnes de mois - détection souple
@@ -53,6 +54,7 @@ if uploaded_file:
 
         if len(month_columns) != 12:
             st.error("❌ 12 colonnes de mois attendues (chiffres ou noms de mois en français).")
+            st.stop()
 
         st.success("✅ Données chargées")
         st.dataframe(df.head())
