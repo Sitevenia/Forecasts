@@ -93,13 +93,16 @@ if uploaded_file:
         
     # Comparatif
     comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
-    comparatif = comparatif.rename(columns={col: f"{col} (sim1)" for col in month_columns})
+        comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
+        comparatif = comparatif.rename(columns={col: f"{col} (sim1)" for col in month_columns})
 
-    for col in month_columns:
-        comparatif[f"{col} (sim2)"] = df_sim2[col]
-        comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
+        for col in month_columns:
+            comparatif[f"{col} (sim2)"] = df_sim2[col]
+            comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
 
 
+    except Exception as e:
+        st.error(f"Erreur de traitement : {e}")
     except Exception as e:
         st.error(f"Erreur de traitement : {e}")
     comparatif["écart total"] = df_sim2[month_columns].sum(axis=1) - df_sim1[month_columns].sum(axis=1)
