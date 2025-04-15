@@ -99,6 +99,9 @@ if uploaded_file:
         comparatif[f"{col} (sim2)"] = df_sim2[col]
         comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
 
+
+    except Exception as e:
+        st.error(f"Erreur de traitement : {e}")
     comparatif["écart total"] = df_sim2[month_columns].sum(axis=1) - df_sim1[month_columns].sum(axis=1)
 
         if use_objectif:
