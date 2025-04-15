@@ -93,6 +93,7 @@ if uploaded_file:
         
     # Comparatif
     comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
+    try:
         comparatif = df_sim1[["référence fournisseur", "référence produit", "désignation", "stock"] + month_columns].copy()
         comparatif = comparatif.rename(columns={col: f"{col} (sim1)" for col in month_columns})
 
@@ -100,21 +101,19 @@ if uploaded_file:
             comparatif[f"{col} (sim2)"] = df_sim2[col]
             comparatif[f"{col} (écart)"] = df_sim2[col] - df_sim1[col]
 
+        st.subheader("📊 Comparatif des deux simulations")
+        st.dataframe(comparatif)
+
+        # Export Excel et PDF
+        with pd.ExcelWriter("comparatif_forecast.xlsx", engine="xlsxwriter") as writer:
+            df_sim1.to_excel(writer, sheet_name="Simulation 1", index=False)
+            df_sim2.to_excel(writer, sheet_name="Simulation 2", index=False)
+            comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+        with open("comparatif_forecast.xlsx", "rb") as file:
+            st.download_button("📥 Télécharger le fichier Excel", file, file_name="comparatif_forecast.xlsx")
 
     except Exception as e:
         st.error(f"Erreur de traitement : {e}")
-    except Exception as e:
-        st.error(f"Erreur de traitement : {e}")
-    comparatif["écart total"] = df_sim2[month_columns].sum(axis=1) - df_sim1[month_columns].sum(axis=1)
-
-        if use_objectif:
-            st.subheader("🔍 Comparatif des simulations")
-            comparatif = df[["référence produit", "désignation"]].copy()
-            comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
-            comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
-            comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
-            st.dataframe(comparatif)
-
         
     # Affichage graphique
     st.subheader("Analyse graphique")
