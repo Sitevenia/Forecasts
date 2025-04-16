@@ -113,7 +113,7 @@ if uploaded_file:
             df_sim2["Qté Sim 2"] = df_sim2[month_columns]
 if "Qté Sim 2" in df_sim2.columns:
                 df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
-
+else:
             remarques_sim2 = []
             for idx, row in df_sim2.iterrows():
                 taux = row["Taux de rotation"]
