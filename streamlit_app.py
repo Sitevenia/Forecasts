@@ -81,18 +81,19 @@ if uploaded_file:
 
         if use_objectif and objectif_global:
             df_sim2 = None
+        df_sim2 = pd.DataFrame()
         # --- Simulation 2 : objectif d'achat (approche incrémentale) ---
             df_sim2 = df.copy()
-            if df_sim2 is not None:
+            if not df_sim2.empty:
                 df_sim2[month_columns] = 0
             if df_sim2 is not None:
                 df_sim2["tarif d'achat"] = pd.to_numeric(df_sim2["tarif d'achat"], errors="coerce").fillna(0)
-            if df_sim2 is not None:
+            if not df_sim2.empty:
                 df_sim2["conditionnement"] = pd.to_numeric(df_sim2["conditionnement"], errors="coerce").fillna(1).replace(0, 1)
             if df_sim2 is not None:
                 df_sim2["stock"] = pd.to_numeric(df_sim2["stock"], errors="coerce").fillna(1).replace(0, 1)
 
-            if df_sim2 is not None:
+            if not df_sim2.empty:
 
                 df_sim2["coût_conditionnement"] = df_sim2["tarif d'achat"] * df_sim2["conditionnement"]
             if df_sim2 is not None:
@@ -116,15 +117,15 @@ if uploaded_file:
                         continue
 
             for col in month_columns:
-                if df_sim2 is not None:
+                if not df_sim2.empty:
                     df_sim2[col] = (df_sim2["packs"] * df_sim2["conditionnement"] / 12).round().astype(int)
 
-            if df_sim2 is not None:
+            if not df_sim2.empty:
 
                 df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
             if df_sim2 is not None:
                 df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).replace([np.inf, -np.inf], 0).round(2)
-            if df_sim2 is not None:
+            if not df_sim2.empty:
                 df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
 
             remarques_sim2 = []
@@ -138,7 +139,7 @@ if uploaded_file:
                     remarques_sim2.append("Quantité augmentée : taux > 4")
                 else:
                     remarques_sim2.append("")
-            if df_sim2 is not None:
+            if not df_sim2.empty:
                 df_sim2["Remarque"] = remarques_sim2
 
         comparatif = df[["référence produit", "désignation"]].copy()
