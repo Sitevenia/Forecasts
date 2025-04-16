@@ -80,6 +80,10 @@ if uploaded_file:
         df_sim1["Remarque"] = remarques_sim1
 
         # --- Simulation 2 : objectif d'achat (approche incrémentale) ---
+        if objectif_global is None or objectif_global <= 0:
+            st.warning("Veuillez saisir un objectif d'achat supérieur à zéro.")
+            st.stop()
+
         df_sim2 = df.copy()
         df_sim2[month_columns] = 0  # on part de 0 commande
         df_sim2["tarif d'achat"] = pd.to_numeric(df_sim2["tarif d'achat"], errors="coerce").fillna(0)
