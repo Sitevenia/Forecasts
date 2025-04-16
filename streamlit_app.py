@@ -129,10 +129,10 @@ if uploaded_file:
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
         comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
 try:
-    if "Qté Sim 2" in df_sim2.columns:
-        comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
-except Exception as e:
-    st.warning(f"Colonne Qté Sim 2 non disponible : {e}")
+    comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
+except:
+    pass
+    comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
         comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
         comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
         st.subheader("🔍 Comparatif")
