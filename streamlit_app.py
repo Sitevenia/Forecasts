@@ -110,7 +110,9 @@ if uploaded_file:
 
             df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
             df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).replace([np.inf, -np.inf], 0).round(2)
-            df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
+            df_sim2["Qté Sim 2"] = df_sim2[month_columns]
+if "Qté Sim 2" in df_sim2.columns:
+                df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
 
             remarques_sim2 = []
             for idx, row in df_sim2.iterrows():
@@ -129,6 +131,8 @@ if uploaded_file:
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
         comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
         comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
+if "Qté Sim 2" in df_sim2.columns:
+     df_sim2["Qté Sim 2"]
         comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
         comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
         st.subheader("🔍 Comparatif")
