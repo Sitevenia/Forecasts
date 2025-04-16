@@ -130,7 +130,8 @@ if "Qté Sim 2" in df_sim2.columns:
         comparatif = df[["référence produit", "désignation"]].copy()
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
         comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
-        comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
+        if "Qté Sim 2" in df_sim2.columns:
+    comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
 if "Qté Sim 2" in df_sim2.columns:
      df_sim2["Qté Sim 2"]
         comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
