@@ -51,7 +51,7 @@ if uploaded_file:
         st.success("✅ Données chargées")
         progression = st.slider("📈 Progression (%)", -100, 200, 10)
         use_objectif = st.checkbox("🎯 Activer un objectif d'achat ?")
-        objectif_achat = st.number_input("Objectif d'achat annuel (€)", value=1000000)
+        objectif_global = st.number_input("💰 Objectif total (€)", value=0.0, step=1000.0) if use_objectif else None
 
         for col in ["tarif d'achat", "conditionnement", "stock"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).replace(0, 1)
@@ -79,31 +79,54 @@ if uploaded_file:
                 remarques_sim1.append("")
         df_sim1["Remarque"] = remarques_sim1
 
+        # --- Simulation 2 : objectif d'achat (approche incrémentale) ---
+        df_sim2 = df.copy()
+        df_sim2[month_columns] = 0  # on part de 0 commande
+        df_sim2["tarif d'achat"] = pd.to_numeric(df_sim2["tarif d'achat"], errors="coerce").fillna(0)
+        df_sim2["conditionnement"] = pd.to_numeric(df_sim2["conditionnement"], errors="coerce").fillna(1).replace(0, 1)
+        df_sim2["stock"] = pd.to_numeric(df_sim2["stock"], errors="coerce").fillna(1).replace(0, 1)
 
-    if st.button("Lancer Simulation 2 (Objectif d'achat)"):
-        try:
-            df["tarif d’achat"] = pd.to_numeric(df["tarif d’achat"], errors="coerce")
-            df["conditionnement"] = pd.to_numeric(df["conditionnement"], errors="coerce").replace(0, np.nan)
-            df[month_columns] = df[month_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
+        # Calcul coût unitaire d'un lot complet pour chaque produit
+        df_sim2["coût_conditionnement"] = df_sim2["tarif d'achat"] * df_sim2["conditionnement"]
+        df_sim2["packs"] = 0  # nombre de conditionnements à ajouter
 
-            total_achat_sim1 = (df["tarif d’achat"] * df[month_columns].sum(axis=1)).sum()
+        # Initialisation
+        total = 0
+        max_iterations = 100000
 
-            if total_achat_sim1 > 0:
-                coef = objectif_achat / total_achat_sim1
-                df_sim2 = df.copy()
-                for month in month_columns:
-                    df_sim2[month] = df[month] * coef
+        for _ in range(max_iterations):
+            if total >= objectif_global:
+                break
+            eligible = df_sim2[df_sim2["coût_conditionnement"] > 0].copy()
+            eligible = eligible.sort_values(by="coût_conditionnement")
+            for idx in eligible.index:
+                potential_add = df_sim2.loc[idx, "coût_conditionnement"]
+                if total + potential_add <= objectif_global:
+                    df_sim2.loc[idx, "packs"] += 1
+                    total += potential_add
+                    break
+                else:
+                    continue
 
-                # Application du conditionnement
-                df_sim2[month_columns] = df_sim2[month_columns].div(df["conditionnement"]).apply(np.ceil).mul(df["conditionnement"])
-                df_sim2[month_columns] = df_sim2[month_columns].fillna(0).astype(int)
+        for col in month_columns:
+            df_sim2[col] = (df_sim2["packs"] * df_sim2["conditionnement"] / 12).round().astype(int)
 
-                st.success("Simulation effectuée.")
-                st.dataframe(df_sim2)
+        df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
+        df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).replace([np.inf, -np.inf], 0).round(2)
+        df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
+
+        remarques_sim2 = []
+        for idx, row in df_sim2.iterrows():
+            taux = row["Taux de rotation"]
+            if taux < 0.5:
+                df_sim2.loc[idx, month_columns] *= 0.7
+                remarques_sim2.append("Quantité réduite : taux < 0.5")
+            elif taux > 4:
+                df_sim2.loc[idx, month_columns] *= 1.2
+                remarques_sim2.append("Quantité augmentée : taux > 4")
             else:
-                st.warning("Total achat Simulation 1 nul.")
-        except Exception as e:
-            st.error(f"Erreur lors du calcul : {e}")
+                remarques_sim2.append("")
+        df_sim2["Remarque"] = remarques_sim2
 
         comparatif = df[["référence produit", "désignation"]].copy()
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
