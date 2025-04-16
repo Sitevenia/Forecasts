@@ -105,8 +105,6 @@ if uploaded_file:
                 df_sim2.loc[idx, "packs"] += 1
                 total += potential_add
                 break
-            else:
-                continue
 
     for col in month_columns:
         df_sim2[col] = (df_sim2["packs"] * df_sim2["conditionnement"] / 12).round().astype(int)
@@ -127,6 +125,7 @@ if uploaded_file:
         else:
             remarques_sim2.append("")
     df_sim2["Remarque"] = remarques_sim2
+
 
         comparatif = df[["référence produit", "désignation"]].copy()
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
