@@ -79,32 +79,32 @@ if uploaded_file:
                 remarques_sim1.append("")
         df_sim1["Remarque"] = remarques_sim1
 
-        df_sim2 = df.copy()
-        df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
-        if use_objectif and objectif_global:
-            montant_actuel = (df_sim1[month_columns].sum(axis=1) * df_sim1["tarif d'achat"]).sum()
-            coef = objectif_global / montant_actuel if montant_actuel > 0 else 1
-            df_sim2[month_columns] = (df_sim2[month_columns] * coef).clip(lower=0)
-        for col in month_columns:
-            df_sim2[col] = (df_sim2[col] / df_sim2["conditionnement"]).round() * df_sim2["conditionnement"].round().astype(int)
-            df_sim2[month_columns] = df_sim2[month_columns].round().astype(int)
+        objectif_achat = st.number_input("Objectif d'achat annuel (€)", value=1000000)
 
-        df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
-        df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).round(2)
-        df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
+    if st.button("Lancer Simulation 2 (Objectif d'achat)"):
+        try:
+            df["tarif d’achat"] = pd.to_numeric(df["tarif d’achat"], errors="coerce")
+            df["conditionnement"] = pd.to_numeric(df["conditionnement"], errors="coerce").replace(0, np.nan)
+            df[month_columns] = df[month_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
 
-        remarques_sim2 = []
-        for idx, row in df_sim2.iterrows():
-            taux = row["Taux de rotation"]
-            if taux < 0.5:
-                df_sim2.loc[idx, month_columns] *= 0.7
-                remarques_sim2.append("Quantité réduite : taux < 0.5")
-            elif taux > 4:
-                df_sim2.loc[idx, month_columns] *= 1.2
-                remarques_sim2.append("Quantité augmentée : taux > 4")
+            total_achat_sim1 = (df["tarif d’achat"] * df[month_columns].sum(axis=1)).sum()
+
+            if total_achat_sim1 > 0:
+                coef = objectif_achat / total_achat_sim1
+                df_sim2 = df.copy()
+                for month in month_columns:
+                    df_sim2[month] = df[month] * coef
+
+                # Application du conditionnement
+                df_sim2[month_columns] = df_sim2[month_columns].div(df["conditionnement"]).apply(np.ceil).mul(df["conditionnement"])
+                df_sim2[month_columns] = df_sim2[month_columns].fillna(0).astype(int)
+
+                st.success("Simulation effectuée.")
+                st.dataframe(df_sim2)
             else:
-                remarques_sim2.append("")
-        df_sim2["Remarque"] = remarques_sim2
+                st.warning("Total achat Simulation 1 nul.")
+        except Exception as e:
+            st.error(f"Erreur lors du calcul : {e}")
 
         comparatif = df[["référence produit", "désignation"]].copy()
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
