@@ -51,7 +51,7 @@ if uploaded_file:
         st.success("✅ Données chargées")
         progression = st.slider("📈 Progression (%)", -100, 200, 10)
         use_objectif = st.checkbox("🎯 Activer un objectif d'achat ?")
-        objectif_global = st.number_input("💰 Objectif total (€)", value=0.0, step=1000.0) if use_objectif else None
+        objectif_achat = st.number_input("Objectif d'achat annuel (€)", value=1000000)
 
         for col in ["tarif d'achat", "conditionnement", "stock"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).replace(0, 1)
@@ -79,7 +79,6 @@ if uploaded_file:
                 remarques_sim1.append("")
         df_sim1["Remarque"] = remarques_sim1
 
-        objectif_achat = st.number_input("Objectif d'achat annuel (€)", value=1000000)
 
     if st.button("Lancer Simulation 2 (Objectif d'achat)"):
         try:
