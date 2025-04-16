@@ -79,53 +79,51 @@ if uploaded_file:
                 remarques_sim1.append("")
         df_sim1["Remarque"] = remarques_sim1
 
-        if use_objectif and objectif_global:
-    # --- Simulation 2 : objectif d'achat (approche incrémentale) ---
-    df_sim2 = pd.DataFrame()
-    df_sim2 = df.copy()
-    df_sim2[month_columns] = 0
-    df_sim2["tarif d'achat"] = pd.to_numeric(df_sim2["tarif d'achat"], errors="coerce").fillna(0)
-    df_sim2["conditionnement"] = pd.to_numeric(df_sim2["conditionnement"], errors="coerce").fillna(1).replace(0, 1)
-    df_sim2["stock"] = pd.to_numeric(df_sim2["stock"], errors="coerce").fillna(1).replace(0, 1)
+        df_sim2 = df.copy()
+        df_sim2[month_columns] = df_sim2[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
 
-    df_sim2["coût_conditionnement"] = df_sim2["tarif d'achat"] * df_sim2["conditionnement"]
-    df_sim2["packs"] = 0
+        if use_objectif and objectif_global and st.button("▶️ Lancer Simulation 2 (objectif d'achat)"):
+            df_sim2[month_columns] = 0
+            df_sim2["tarif d'achat"] = pd.to_numeric(df_sim2["tarif d'achat"], errors="coerce").fillna(0)
+            df_sim2["conditionnement"] = pd.to_numeric(df_sim2["conditionnement"], errors="coerce").fillna(1).replace(0, 1)
+            df_sim2["stock"] = pd.to_numeric(df_sim2["stock"], errors="coerce").fillna(1).replace(0, 1)
 
-    total = 0
-    max_iterations = 100000
+            df_sim2["coût_conditionnement"] = df_sim2["tarif d'achat"] * df_sim2["conditionnement"]
+            df_sim2["packs"] = 0
+            total = 0
+            max_iterations = 100000
 
-    for _ in range(max_iterations):
-        if total >= objectif_global:
-            break
-        eligible = df_sim2[df_sim2["coût_conditionnement"] > 0].copy()
-        eligible = eligible.sort_values(by="coût_conditionnement")
-        for idx in eligible.index:
-            potential_add = df_sim2.loc[idx, "coût_conditionnement"]
-            if total + potential_add <= objectif_global:
-                df_sim2.loc[idx, "packs"] += 1
-                total += potential_add
-                break
+            for _ in range(max_iterations):
+                if total >= objectif_global:
+                    break
+                eligible = df_sim2[df_sim2["coût_conditionnement"] > 0].copy()
+                eligible = eligible.sort_values(by="coût_conditionnement")
+                for idx in eligible.index:
+                    potential_add = df_sim2.loc[idx, "coût_conditionnement"]
+                    if total + potential_add <= objectif_global:
+                        df_sim2.loc[idx, "packs"] += 1
+                        total += potential_add
+                        break
 
-    for col in month_columns:
-        df_sim2[col] = (df_sim2["packs"] * df_sim2["conditionnement"] / 12).round().astype(int)
+            for col in month_columns:
+                df_sim2[col] = (df_sim2["packs"] * df_sim2["conditionnement"] / 12).round().astype(int)
 
-    df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
-    df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).replace([np.inf, -np.inf], 0).round(2)
-    df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
+            df_sim2["Montant annuel"] = df_sim2[month_columns].sum(axis=1) * df_sim2["tarif d'achat"]
+            df_sim2["Taux de rotation"] = (df_sim2[month_columns].sum(axis=1) / df_sim2["stock"]).replace([np.inf, -np.inf], 0).round(2)
+            df_sim2["Qté Sim 2"] = df_sim2[month_columns].sum(axis=1)
 
-    remarques_sim2 = []
-    for idx, row in df_sim2.iterrows():
-        taux = row["Taux de rotation"]
-        if taux < 0.5:
-            df_sim2.loc[idx, month_columns] *= 0.7
-            remarques_sim2.append("Quantité réduite : taux < 0.5")
-        elif taux > 4:
-            df_sim2.loc[idx, month_columns] *= 1.2
-            remarques_sim2.append("Quantité augmentée : taux > 4")
-        else:
-            remarques_sim2.append("")
-    df_sim2["Remarque"] = remarques_sim2
-
+            remarques_sim2 = []
+            for idx, row in df_sim2.iterrows():
+                taux = row["Taux de rotation"]
+                if taux < 0.5:
+                    df_sim2.loc[idx, month_columns] *= 0.7
+                    remarques_sim2.append("Quantité réduite : taux < 0.5")
+                elif taux > 4:
+                    df_sim2.loc[idx, month_columns] *= 1.2
+                    remarques_sim2.append("Quantité augmentée : taux > 4")
+                else:
+                    remarques_sim2.append("")
+            df_sim2["Remarque"] = remarques_sim2
 
         comparatif = df[["référence produit", "désignation"]].copy()
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
