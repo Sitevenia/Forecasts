@@ -110,9 +110,9 @@ if uploaded_file:
         comparatif["Qté Sim 1"] = df_sim1["Qté Sim 1"]
         comparatif["Montant Sim 1"] = df_sim1["Montant annuel"]
         if "Qté Sim 2" in df_sim2.columns:
-    comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
+            comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
         if "Montant annuel" in df_sim2.columns:
-    comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
+            comparatif["Montant Sim 2"] = df_sim2["Montant annuel"]
         comparatif["Écart (€)"] = comparatif["Montant Sim 2"] - comparatif["Montant Sim 1"]
         st.subheader("🔍 Comparatif")
         st.dataframe(comparatif)
