@@ -18,13 +18,9 @@ if uploaded_file:
     total_sim1 = df["Montant achat N-1"].sum()
     st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
-    colonnes_disponibles = ["Référence fournisseur", "Référence produit", "Désignation", "Montant achat N-1"]
-    colonnes_presentes = [col for col in colonnes_disponibles if col in df.columns]
-    st.dataframe(df[colonnes_presentes])
+    objectif_global = st.number_input("🎯 Montant cible à atteindre pour la Simulation 2", value=0)
 
-    objectif_global = st.number_input("🎯 Objectif de montant total pour Simulation 2", value=850000)
-
-    if st.button("▶️ Lancer Simulation 2"):
+    if objectif_global > 0 and st.button("▶️ Lancer Simulation 2"):
         df_sim2 = df.copy()
         for col in month_columns:
             df_sim2[col] = 0
