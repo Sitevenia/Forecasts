@@ -18,7 +18,7 @@ if uploaded_file:
     total_sim1 = df["Montant achat N-1"].sum()
     st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
-    st.dataframe(df[["Référence fournisseur", "Référence produit", "désignation", "Montant achat N-1"]])
+    st.dataframe(df[["Référence fournisseur", "Référence produit", "Désignation", "Montant achat N-1"]])
 
     objectif_global = st.number_input("🎯 Objectif de montant total pour Simulation 2", value=850000)
 
@@ -49,10 +49,10 @@ if uploaded_file:
         df_sim2["Montant Sim 2"] = df_sim2["Qté Totale"] * df_sim2["Tarif d'achat"]
         montant_sim2 = df_sim2["Montant Sim 2"].sum()
         st.metric("✅ Objectif atteint", "€ {:,.2f}".format(montant_sim2))
-        st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "désignation", "Montant Sim 2"]])
+        st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Montant Sim 2"]])
 
         st.subheader("📊 Comparatif Simulation 1 vs Simulation 2")
-        comparatif = df[["Référence fournisseur", "Référence produit", "désignation"]].copy()
+        comparatif = df[["Référence fournisseur", "Référence produit", "Désignation"]].copy()
         comparatif["Montant Sim 1"] = df["Montant achat N-1"]
         if "Montant Sim 2" in df_sim2.columns:
             comparatif["Montant Sim 2"] = df_sim2["Montant Sim 2"]
