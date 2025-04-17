@@ -18,7 +18,9 @@ if uploaded_file:
     total_sim1 = df["Montant achat N-1"].sum()
     st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
-    st.dataframe(df[["Référence fournisseur", "Référence produit", "Désignation", "Montant achat N-1"]])
+    colonnes_disponibles = ["Référence fournisseur", "Référence produit", "Désignation", "Montant achat N-1"]
+    colonnes_presentes = [col for col in colonnes_disponibles if col in df.columns]
+    st.dataframe(df[colonnes_presentes])
 
     objectif_global = st.number_input("🎯 Objectif de montant total pour Simulation 2", value=850000)
 
