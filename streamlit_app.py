@@ -67,17 +67,23 @@ if uploaded_file:
                     saisonnalite.loc[i, month_columns],
                     df.at[i, "Conditionnement"]
                 )
-                df.loc[i, month_columns] = repartition
             df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
             total_sim1 = df["Montant Sim 1"].sum()
             st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
+            # Export Simulation 1
+            import io
+            output1 = io.BytesIO()
+            with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
+                df.to_excel(writer, sheet_name="Simulation_1", index=False)
+            output1.seek(0)
+            st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
+
 
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, month_columns],
                 df.at[i, "Conditionnement"]
             )
-            df.loc[i, month_columns] = repartition
 
 
         # Simulation 2
