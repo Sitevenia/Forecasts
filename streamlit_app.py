@@ -169,7 +169,7 @@ if uploaded_file:
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
             if colonnes_sim2:
-            df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+                df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
             comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         
         if "Qté Sim 2" in df_sim2.columns:
