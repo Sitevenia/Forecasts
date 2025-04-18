@@ -88,7 +88,7 @@ if uploaded_file:
             import io
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
-                df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
+                df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
             output1.seek(0)
             st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
 
@@ -147,9 +147,22 @@ if uploaded_file:
             # Export Excel
             import io
             output = io.BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
-                df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_2", index=False)
+            
+        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
+        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
+
+        if "Stock actuel" in df.columns:
+            colonnes_sim1.append("Stock actuel")
+            colonnes_sim2.append("Stock actuel")
+        else:
+            st.warning("🟡 La colonne 'Stock actuel' est absente du fichier.")
+
+        colonnes_sim1 += ["Qté Sim 1", "Montant Sim 1"] + mois_selectionnes
+        colonnes_sim2 += ["Qté Sim 2", "Montant Sim 2"] + mois_selectionnes
+
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+                df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
             output.seek(0)
             st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
