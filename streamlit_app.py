@@ -145,10 +145,13 @@ if uploaded_file:
 
             # Export Excel
             import io
-            output = io.BytesIO()
-            
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
+output = io.BytesIO()
+with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+    df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+    comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+output.seek(0)
+
 
         if "Stock" in df.columns:
             colonnes_sim1.append("Stock")
