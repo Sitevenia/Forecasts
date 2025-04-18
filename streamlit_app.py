@@ -24,15 +24,17 @@ if uploaded_file:
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
         progression = st.number_input("📈 Progression (%)", value=0.0, step=1.0)
-        df["Qté Sim 1"] = (df["Total ventes N-1"] * (1 + progression / 100))
+        df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).astype(int)
+
         for mois in month_columns:
             df[mois] = (df["Qté Sim 1"] * saisonnalite[mois]).round().astype(int)
+
         df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
         total_sim1 = df["Montant Sim 1"].sum()
         st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
-        # Simulation 2 : montée équilibrée
+        # Simulation 2
         st.subheader("Simulation 2 : atteindre un objectif d'achat (montée équilibrée)")
         objectif = st.number_input("🎯 Objectif (€)", value=0.0, step=1000.0)
 
@@ -47,8 +49,10 @@ if uploaded_file:
                 coef = objectif / total_base_value
                 df_sim2["Qté ajustée"] = df_sim2["Qté Base"] * coef
                 df_sim2["Qté Sim 2"] = (np.ceil(df_sim2["Qté ajustée"] / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
+
                 for mois in month_columns:
                     df_sim2[mois] = (df_sim2["Qté Sim 2"] * saisonnalite[mois]).round().astype(int)
+
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
                 st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
