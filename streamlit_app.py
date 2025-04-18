@@ -148,7 +148,9 @@ if uploaded_file:
             output = io.BytesIO()
             
         colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
+        colonnes_sim2 = []
+        if "df_sim2" in locals():
+            colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
 
         if "Stock actuel" in df.columns:
             colonnes_sim1.append("Stock actuel")
@@ -166,6 +168,7 @@ if uploaded_file:
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+            if colonnes_sim2:
             df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
             comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         
