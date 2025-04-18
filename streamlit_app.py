@@ -47,12 +47,26 @@ if uploaded_file:
         st.success("✅ Fichier chargé avec succès.")
         month_columns = [str(i) for i in range(1, 13)]
 
+        # Sélection des mois à inclure
+        noms_mois = {
+            "Janvier": "1", "Février": "2", "Mars": "3", "Avril": "4",
+            "Mai": "5", "Juin": "6", "Juillet": "7", "Août": "8",
+            "Septembre": "9", "Octobre": "10", "Novembre": "11", "Décembre": "12"
+        }
+        mois_selectionnes_nom = st.multiselect(
+            "📅 Mois à inclure dans les simulations :",
+            list(noms_mois.keys()),
+            default=list(noms_mois.keys())
+        )
+        mois_selectionnes = [noms_mois[m] for m in mois_selectionnes_nom]
+
+
         for col in month_columns + ["Tarif d'achat", "Conditionnement"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
         df["Conditionnement"] = df["Conditionnement"].replace(0, 1)
-        df["Total ventes N-1"] = df[month_columns].sum(axis=1).replace(0, np.nan)
-        saisonnalite = df[month_columns].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
+        df["Total ventes N-1"] = df[mois_selectionnes].sum(axis=1).replace(0, np.nan)
+        saisonnalite = df[mois_selectionnes].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
 
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
@@ -64,7 +78,7 @@ if uploaded_file:
             for i in df.index:
                 repartition = repartir_et_ajuster(
                     df.at[i, "Qté Sim 1"],
-                    saisonnalite.loc[i, month_columns],
+                    saisonnalite.loc[i, mois_selectionnes],
                     df.at[i, "Conditionnement"]
                 )
             df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
@@ -81,7 +95,7 @@ if uploaded_file:
 
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
-                saisonnalite.loc[i, month_columns],
+                saisonnalite.loc[i, mois_selectionnes],
                 df.at[i, "Conditionnement"]
             )
 
@@ -111,7 +125,7 @@ if uploaded_file:
             for i in df_sim2.index:
                 repartition = repartir_et_ajuster(
                     df_sim2.at[i, "Qté Sim 2"],
-                    saisonnalite.loc[i, month_columns],
+                    saisonnalite.loc[i, mois_selectionnes],
                     df_sim2.at[i, "Conditionnement"]
                 )
                 df_sim2.loc[i, month_columns] = repartition
