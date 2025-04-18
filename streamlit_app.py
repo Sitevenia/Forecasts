@@ -9,9 +9,7 @@ st.title("📦 Application de Prévision des Commandes")
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
 # Répartition saisonnière ajustée au total et au conditionnement
-
 def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
-    # Évite les NaN, les ventes nulles ou les saisonnalités mal définies
     try:
         if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
             return np.zeros(12, dtype=int)
@@ -20,7 +18,7 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
             return np.zeros(12, dtype=int)
         saisonnalite = saisonnalite / saisonnalite.sum()
         raw = qte_totale * saisonnalite
-        repartition = np.ceil(raw / conditionnement) * conditionnement
+        repartition = np.nan_to_num(np.ceil(raw / conditionnement) * conditionnement, nan=0.0, posinf=0.0, neginf=0.0)
         ecart = int(qte_totale - repartition.sum())
         while ecart != 0:
             idx = np.argmax(saisonnalite) if ecart > 0 else np.argmax(repartition)
@@ -35,24 +33,6 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
     except:
         return np.zeros(12, dtype=int)
 
-    saisonnalite = np.array(saisonnalite)
-    saisonnalite = saisonnalite / saisonnalite.sum()
-    raw = qte_totale * saisonnalite
-    repartition = np.ceil(raw / conditionnement) * conditionnement
-    ecart = int(qte_totale - repartition.sum())
-
-    # Ajustement fin pour coller exactement à la quantité totale
-    while ecart != 0:
-        idx = np.argmax(saisonnalite) if ecart > 0 else np.argmax(repartition)
-        modif = conditionnement if ecart > 0 else -conditionnement
-        tentative = repartition[idx] + modif
-        if tentative >= 0:
-            repartition[idx] = tentative
-            ecart -= modif
-        else:
-            break
-    return repartition.astype(int)
-
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
@@ -64,7 +44,7 @@ if uploaded_file:
         df["Conditionnement"] = pd.to_numeric(df["Conditionnement"], errors="coerce").fillna(1).replace(0, 1)
 
         df["Total ventes N-1"] = df[month_columns].sum(axis=1).replace(0, np.nan)
-        saisonnalite = df[month_columns].div(df["Total ventes N-1"].replace(0, 1), axis=0)
+        saisonnalite = df[month_columns].div(df["Total ventes N-1"].replace(0, np.nan), axis=0).replace([np.inf, -np.inf], 0).fillna(0)
 
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
@@ -78,7 +58,10 @@ if uploaded_file:
                 saisonnalite.loc[i, month_columns],
                 df.at[i, "Conditionnement"]
             )
-            df.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
+            try:
+                df.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
+            except:
+                df.loc[i, month_columns] = [0] * 12
 
         df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
         total_sim1 = df["Montant Sim 1"].sum()
@@ -114,7 +97,10 @@ if uploaded_file:
                         saisonnalite.loc[i, month_columns],
                         df_sim2.at[i, "Conditionnement"]
                     )
-                    df_sim2.loc[i, month_columns] = repartition
+                    try:
+                        df_sim2.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
+                    except:
+                        df_sim2.loc[i, month_columns] = [0] * 12
 
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
