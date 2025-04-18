@@ -59,7 +59,7 @@ if uploaded_file:
                 df.at[i, "Conditionnement"]
             )
             try:
-                df.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
+                df.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
             except:
                 df.loc[i, month_columns] = [0] * 12
 
@@ -98,7 +98,7 @@ if uploaded_file:
                         df_sim2.at[i, "Conditionnement"]
                     )
                     try:
-                        df_sim2.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
+                        df_sim2.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
                     except:
                         df_sim2.loc[i, month_columns] = [0] * 12
 
