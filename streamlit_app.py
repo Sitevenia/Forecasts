@@ -37,7 +37,7 @@ if uploaded_file:
         st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
         # Simulation 2
-        st.subheader("Simulation 2 : atteindre un objectif d'achat (montée équilibrée)")
+        st.subheader("Simulation 2 : objectif d'achat précis avec arrondi")
         objectif = st.number_input("🎯 Objectif (€)", value=0.0, step=1000.0)
 
         if objectif > 0 and st.button("▶️ Lancer Simulation 2"):
@@ -48,9 +48,18 @@ if uploaded_file:
             if total_base_value == 0:
                 st.error("❌ Impossible : total de base nul.")
             else:
-                coef = objectif / total_base_value
-                df_sim2["Qté ajustée"] = df_sim2["Qté Base"] * coef
-                df_sim2["Qté Sim 2"] = (np.ceil(df_sim2["Qté ajustée"] / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
+                # Ajustement par recherche de coefficient
+                best_coef = 1.0
+                best_diff = float("inf")
+                for coef in np.arange(0.01, 2.0, 0.01):
+                    q_test = np.ceil((df_sim2["Qté Base"] * coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]
+                    montant_test = (q_test * df_sim2["Tarif d'achat"]).sum()
+                    diff = abs(montant_test - objectif)
+                    if montant_test <= objectif and diff < best_diff:
+                        best_diff = diff
+                        best_coef = coef
+
+                df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
 
                 for mois in month_columns:
                     raw = df_sim2["Qté Sim 2"] * saisonnalite[mois]
