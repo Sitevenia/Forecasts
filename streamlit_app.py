@@ -78,7 +78,7 @@ if uploaded_file:
                 saisonnalite.loc[i, month_columns],
                 df.at[i, "Conditionnement"]
             )
-            df.loc[i, month_columns] = repartition
+            df.loc[i, month_columns] = pd.Series(repartition, index=month_columns).fillna(0).astype(int)
 
         df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
         total_sim1 = df["Montant Sim 1"].sum()
