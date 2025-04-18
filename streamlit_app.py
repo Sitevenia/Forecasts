@@ -150,11 +150,11 @@ if uploaded_file:
         colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
         colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
 
-        if "Stock actuel" in df.columns:
-            colonnes_sim1.append("Stock actuel")
-            colonnes_sim2.append("Stock actuel")
+        if "Stock" in df.columns:
+            colonnes_sim1.append("Stock")
+            colonnes_sim2.append("Stock")
         else:
-            st.warning("🟡 La colonne 'Stock actuel' est absente du fichier.")
+            st.warning("🟡 La colonne 'Stock' est absente du fichier.")
 
         colonnes_sim1 += ["Qté Sim 1", "Montant Sim 1"] + mois_selectionnes
         colonnes_sim2 += ["Qté Sim 2", "Montant Sim 2"] + mois_selectionnes
