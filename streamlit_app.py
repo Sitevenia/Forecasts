@@ -10,7 +10,12 @@ uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
 # Répartition saisonnière ajustée au total et au conditionnement
 def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
+    if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
+        return np.zeros(12, dtype=int)
     saisonnalite = np.array(saisonnalite.fillna(0))
+    if saisonnalite.sum() == 0:
+        return np.zeros(12, dtype=int)
+    saisonnalite = np.array(saisonnalite)
     saisonnalite = saisonnalite / saisonnalite.sum()
     raw = qte_totale * saisonnalite
     repartition = np.ceil(raw / conditionnement) * conditionnement
@@ -34,12 +39,12 @@ if uploaded_file:
         st.success("✅ Fichier chargé avec succès.")
         month_columns = [str(i) for i in range(1, 13)]
 
-        df[month_columns] = df[month_columns].apply(pd.to_numeric, errors='coerce').fillna(0)
+        df[month_columns] = df[month_columns].apply(pd.to_numeric, errors="coerce").fillna(0)
         df["Tarif d'achat"] = pd.to_numeric(df["Tarif d'achat"], errors="coerce").fillna(0)
         df["Conditionnement"] = pd.to_numeric(df["Conditionnement"], errors="coerce").fillna(1).replace(0, 1)
 
         df["Total ventes N-1"] = df[month_columns].sum(axis=1).replace(0, np.nan)
-        saisonnalite = df[month_columns].div(df["Total ventes N-1"].replace(0, 1), axis=0)
+        saisonnalite = df[month_columns].div(df["Total ventes N-1"], axis=0).fillna(0)
 
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
