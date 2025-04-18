@@ -152,11 +152,11 @@ if uploaded_file:
         if "df_sim2" in locals():
             colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
 
-        if "Stock actuel" in df.columns:
-            colonnes_sim1.append("Stock actuel")
-            colonnes_sim2.append("Stock actuel")
+        if "Stock" in df.columns:
+            colonnes_sim1.append("Stock")
+            colonnes_sim2.append("Stock")
         else:
-            st.warning("🟡 La colonne 'Stock actuel' est absente du fichier.")
+            st.warning("🟡 La colonne 'Stock' est absente du fichier.")
 
         if "Qté Sim 1" in df.columns:
             colonnes_sim1.append("Qté Sim 1")
@@ -170,13 +170,14 @@ if uploaded_file:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
             if colonnes_sim2:
                 df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
-            comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+            if "comparatif" in locals():
+                comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         
         if "Qté Sim 2" in df_sim2.columns:
             colonnes_sim2.append("Qté Sim 2")
         if "Montant Sim 2" in df_sim2.columns:
             colonnes_sim2.append("Montant Sim 2")
-            colonnes_sim2 += mois_selectionnes
+        colonnes_sim2 += mois_selectionnes
 
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                                                                                                                     st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
