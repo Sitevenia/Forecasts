@@ -8,6 +8,26 @@ st.title("📦 Application de Prévision des Commandes")
 
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
+# Répartition saisonnière ajustée au total et au conditionnement
+def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
+    saisonnalite = np.array(saisonnalite)
+    saisonnalite = saisonnalite / saisonnalite.sum()
+    raw = qte_totale * saisonnalite
+    repartition = np.ceil(raw / conditionnement) * conditionnement
+    ecart = int(qte_totale - repartition.sum())
+
+    # Ajustement fin pour coller exactement à la quantité totale
+    while ecart != 0:
+        idx = np.argmax(saisonnalite) if ecart > 0 else np.argmax(repartition)
+        modif = conditionnement if ecart > 0 else -conditionnement
+        tentative = repartition[idx] + modif
+        if tentative >= 0:
+            repartition[idx] = tentative
+            ecart -= modif
+        else:
+            break
+    return repartition.astype(int)
+
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
@@ -27,17 +47,20 @@ if uploaded_file:
         df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).astype(int)
 
-        for mois in month_columns:
-            raw = df["Qté Sim 1"] * saisonnalite[mois]
-            arrondi = (np.ceil(raw / df["Conditionnement"]) * df["Conditionnement"]).fillna(0)
-            df[mois] = arrondi.clip(lower=0).astype(int)
+        for i in df.index:
+            repartition = repartir_et_ajuster(
+                df.at[i, "Qté Sim 1"],
+                saisonnalite.loc[i, month_columns],
+                df.at[i, "Conditionnement"]
+            )
+            df.loc[i, month_columns] = repartition
 
         df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
         total_sim1 = df["Montant Sim 1"].sum()
         st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
         # Simulation 2
-        st.subheader("Simulation 2 : objectif d'achat précis avec arrondi")
+        st.subheader("Simulation 2 : objectif d'achat ajusté précisément")
         objectif = st.number_input("🎯 Objectif (€)", value=0.0, step=1000.0)
 
         if objectif > 0 and st.button("▶️ Lancer Simulation 2"):
@@ -48,7 +71,6 @@ if uploaded_file:
             if total_base_value == 0:
                 st.error("❌ Impossible : total de base nul.")
             else:
-                # Ajustement par recherche de coefficient
                 best_coef = 1.0
                 best_diff = float("inf")
                 for coef in np.arange(0.01, 2.0, 0.01):
@@ -61,10 +83,13 @@ if uploaded_file:
 
                 df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
 
-                for mois in month_columns:
-                    raw = df_sim2["Qté Sim 2"] * saisonnalite[mois]
-                    arrondi = (np.ceil(raw / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0)
-                    df_sim2[mois] = arrondi.clip(lower=0).astype(int)
+                for i in df_sim2.index:
+                    repartition = repartir_et_ajuster(
+                        df_sim2.at[i, "Qté Sim 2"],
+                        saisonnalite.loc[i, month_columns],
+                        df_sim2.at[i, "Conditionnement"]
+                    )
+                    df_sim2.loc[i, month_columns] = repartition
 
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
