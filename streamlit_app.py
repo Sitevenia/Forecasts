@@ -60,7 +60,9 @@ if uploaded_file:
         df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).fillna(0).astype(int)
 
-        for i in df.index:
+        if st.button("▶️ Lancer la Simulation 1"):
+
+                    for i in df.index:
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, month_columns],
@@ -68,15 +70,16 @@ if uploaded_file:
             )
             df.loc[i, month_columns] = repartition
 
-        df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
-        total_sim1 = df["Montant Sim 1"].sum()
-        st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
+                    df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
+                    total_sim1 = df["Montant Sim 1"].sum()
+                    st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
         # Simulation 2
         st.subheader("Simulation 2 : objectif d'achat ajusté précisément")
         objectif = st.number_input("🎯 Objectif (€)", value=0.0, step=1000.0)
 
-        if objectif > 0 and st.button("▶️ Lancer Simulation 2"):
+        if objectif > 0:
+            if st.button("▶️ Lancer la Simulation 2"):
             df_sim2 = df.copy()
             df_sim2["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
             total_base_value = (df_sim2["Qté Base"] * df_sim2["Tarif d'achat"]).sum()
