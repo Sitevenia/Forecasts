@@ -88,7 +88,7 @@ if uploaded_file:
             import io
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
-                df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
+                df[["Référence fournisseur", "Référence produit", "Désignation", "stock", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
             output1.seek(0)
             st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
 
@@ -134,7 +134,7 @@ if uploaded_file:
             total_sim2 = df_sim2["Montant Sim 2"].sum()
             st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
 
-            st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
+            st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "stock", "Qté Sim 2", "Montant Sim 2"]])
 
             # Comparatif
             st.subheader("📊 Comparatif")
@@ -148,8 +148,8 @@ if uploaded_file:
             import io
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
-                df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_2", index=False)
+                df[["Référence fournisseur", "Référence produit", "Désignation", "stock", "Qté Sim 1", "Montant Sim 1"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_1", index=False)
+                df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "stock", "Qté Sim 2", "Montant Sim 2"] + mois_selectionnes].to_excel(writer, sheet_name="Simulation_2", index=False)
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
             output.seek(0)
             st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
