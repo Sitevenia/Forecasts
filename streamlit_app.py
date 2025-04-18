@@ -53,13 +53,14 @@ if uploaded_file:
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).astype(int)
 
         for i in df.index:
+    try:
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, month_columns],
                 df.at[i, "Conditionnement"]
             )
             try:
-                df.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
+                        df.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
             except:
                 df.loc[i, month_columns] = [0] * 12
 
