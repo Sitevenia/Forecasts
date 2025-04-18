@@ -28,7 +28,9 @@ if uploaded_file:
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).astype(int)
 
         for mois in month_columns:
-            df[mois] = (df["Qté Sim 1"] * saisonnalite[mois]).round().astype(int)
+            raw = df["Qté Sim 1"] * saisonnalite[mois]
+            arrondi = (np.ceil(raw / df["Conditionnement"]) * df["Conditionnement"]).fillna(0)
+            df[mois] = arrondi.clip(lower=0).astype(int)
 
         df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
         total_sim1 = df["Montant Sim 1"].sum()
@@ -51,7 +53,9 @@ if uploaded_file:
                 df_sim2["Qté Sim 2"] = (np.ceil(df_sim2["Qté ajustée"] / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
 
                 for mois in month_columns:
-                    df_sim2[mois] = (df_sim2["Qté Sim 2"] * saisonnalite[mois]).round().astype(int)
+                    raw = df_sim2["Qté Sim 2"] * saisonnalite[mois]
+                    arrondi = (np.ceil(raw / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0)
+                    df_sim2[mois] = arrondi.clip(lower=0).astype(int)
 
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
