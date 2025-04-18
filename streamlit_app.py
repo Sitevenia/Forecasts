@@ -61,19 +61,17 @@ if uploaded_file:
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).fillna(0).astype(int)
 
         if st.button("▶️ Lancer la Simulation 1"):
-
+            for i in df.index:
                 repartition = repartir_et_ajuster(
                     df.at[i, "Qté Sim 1"],
                     saisonnalite.loc[i, month_columns],
                     df.at[i, "Conditionnement"]
                 )
                 df.loc[i, month_columns] = repartition
+            df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
+            total_sim1 = df["Montant Sim 1"].sum()
+            st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
-
-
-
-
-        
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, month_columns],
@@ -81,9 +79,6 @@ if uploaded_file:
             )
             df.loc[i, month_columns] = repartition
 
-        
-        
-        
 
         # Simulation 2
         st.subheader("Simulation 2 : objectif d'achat ajusté précisément")
@@ -125,7 +120,6 @@ if uploaded_file:
             st.subheader("📊 Comparatif")
             comparatif = df[["Référence fournisseur", "Référence produit", "Désignation"]].copy()
             comparatif["Qté Sim 1"] = df["Qté Sim 1"]
-            comparatif["Montant Sim 1"] = df["Montant Sim 1"]
             comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
             comparatif["Montant Sim 2"] = df_sim2["Montant Sim 2"]
             st.dataframe(comparatif)
