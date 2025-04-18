@@ -53,14 +53,13 @@ if uploaded_file:
         df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).astype(int)
 
         for i in df.index:
-    try:
-            repartition = repartir_et_ajuster(
-                df.at[i, "Qté Sim 1"],
-                saisonnalite.loc[i, month_columns],
-                df.at[i, "Conditionnement"]
-            )
             try:
-                        df.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
+                repartition = repartir_et_ajuster(
+                    df.at[i, "Qté Sim 1"],
+                    saisonnalite.loc[i, month_columns],
+                    df.at[i, "Conditionnement"]
+                )
+                df.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
             except:
                 df.loc[i, month_columns] = [0] * 12
 
@@ -93,12 +92,12 @@ if uploaded_file:
                 df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).astype(int)
 
                 for i in df_sim2.index:
-                    repartition = repartir_et_ajuster(
-                        df_sim2.at[i, "Qté Sim 2"],
-                        saisonnalite.loc[i, month_columns],
-                        df_sim2.at[i, "Conditionnement"]
-                    )
                     try:
+                        repartition = repartir_et_ajuster(
+                            df_sim2.at[i, "Qté Sim 2"],
+                            saisonnalite.loc[i, month_columns],
+                            df_sim2.at[i, "Conditionnement"]
+                        )
                         df_sim2.loc[i, month_columns] = pd.Series([int(x) if np.isfinite(x) else 0 for x in repartition], index=month_columns)
                     except:
                         df_sim2.loc[i, month_columns] = [0] * 12
