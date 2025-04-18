@@ -39,6 +39,9 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
     except:
         return [0]*12
 
+df_sim2 = None  # Initialisation sécurisée
+comparatif = None
+
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
 if uploaded_file:
@@ -169,13 +172,14 @@ if uploaded_file:
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
             if colonnes_sim2:
+                if df_sim2 is not None and colonnes_sim2:
                 df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
-            if "comparatif" in locals():
+            if comparatif is not None:
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         
-        if "Qté Sim 2" in df_sim2.columns:
+        if df_sim2 is not None and "Qté Sim 2" in df_sim2.columns:
             colonnes_sim2.append("Qté Sim 2")
-        if "Montant Sim 2" in df_sim2.columns:
+        if df_sim2 is not None and "Montant Sim 2" in df_sim2.columns:
             colonnes_sim2.append("Montant Sim 2")
         colonnes_sim2 += mois_selectionnes
 
