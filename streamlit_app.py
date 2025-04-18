@@ -62,7 +62,18 @@ if uploaded_file:
 
         if st.button("▶️ Lancer la Simulation 1"):
 
-                    for i in df.index:
+                repartition = repartir_et_ajuster(
+                    df.at[i, "Qté Sim 1"],
+                    saisonnalite.loc[i, month_columns],
+                    df.at[i, "Conditionnement"]
+                )
+                df.loc[i, month_columns] = repartition
+
+
+
+
+
+        
             repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, month_columns],
@@ -70,9 +81,9 @@ if uploaded_file:
             )
             df.loc[i, month_columns] = repartition
 
-                    df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
-                    total_sim1 = df["Montant Sim 1"].sum()
-                    st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
+        
+        
+        
 
         # Simulation 2
         st.subheader("Simulation 2 : objectif d'achat ajusté précisément")
