@@ -9,12 +9,32 @@ st.title("📦 Application de Prévision des Commandes")
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
 # Répartition saisonnière ajustée au total et au conditionnement
+
 def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
-    if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
+    # Évite les NaN, les ventes nulles ou les saisonnalités mal définies
+    try:
+        if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
+            return np.zeros(12, dtype=int)
+        saisonnalite = np.array(saisonnalite.fillna(0))
+        if saisonnalite.sum() == 0:
+            return np.zeros(12, dtype=int)
+        saisonnalite = saisonnalite / saisonnalite.sum()
+        raw = qte_totale * saisonnalite
+        repartition = np.ceil(raw / conditionnement) * conditionnement
+        ecart = int(qte_totale - repartition.sum())
+        while ecart != 0:
+            idx = np.argmax(saisonnalite) if ecart > 0 else np.argmax(repartition)
+            modif = conditionnement if ecart > 0 else -conditionnement
+            tentative = repartition[idx] + modif
+            if tentative >= 0:
+                repartition[idx] = tentative
+                ecart -= modif
+            else:
+                break
+        return repartition.astype(int)
+    except:
         return np.zeros(12, dtype=int)
-    saisonnalite = np.array(saisonnalite.fillna(0))
-    if saisonnalite.sum() == 0:
-        return np.zeros(12, dtype=int)
+
     saisonnalite = np.array(saisonnalite)
     saisonnalite = saisonnalite / saisonnalite.sum()
     raw = qte_totale * saisonnalite
@@ -44,7 +64,7 @@ if uploaded_file:
         df["Conditionnement"] = pd.to_numeric(df["Conditionnement"], errors="coerce").fillna(1).replace(0, 1)
 
         df["Total ventes N-1"] = df[month_columns].sum(axis=1).replace(0, np.nan)
-        saisonnalite = df[month_columns].div(df["Total ventes N-1"], axis=0).fillna(0)
+        saisonnalite = df[month_columns].div(df["Total ventes N-1"].replace(0, 1), axis=0)
 
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
