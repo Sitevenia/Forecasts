@@ -172,8 +172,10 @@ if uploaded_file:
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
             if colonnes_sim2:
-                if df_sim2 is not None and colonnes_sim2:
-            df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+                try:
+    df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+except:
+    pass
             if comparatif is not None:
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
         
