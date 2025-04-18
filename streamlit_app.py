@@ -86,9 +86,9 @@ if uploaded_file:
 
         if objectif > 0:
             if st.button("▶️ Lancer la Simulation 2"):
-            df_sim2 = df.copy()
-            df_sim2["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
-            total_base_value = (df_sim2["Qté Base"] * df_sim2["Tarif d'achat"]).sum()
+                df_sim2 = df.copy()
+                df_sim2["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
+                total_base_value = (df_sim2["Qté Base"] * df_sim2["Tarif d'achat"]).sum()
 
             best_coef = 1.0
             best_diff = float("inf")
