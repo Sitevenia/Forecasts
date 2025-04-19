@@ -147,46 +147,23 @@ if uploaded_file:
             st.dataframe(comparatif)
 
             # Export Excel
-            import io
-            output = io.BytesIO()
             
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = []
-        if "df_sim2" in locals():
-            colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
-
-        if "Stock" in df.columns:
-            colonnes_sim1.append("Stock")
-            colonnes_sim2.append("Stock")
-        else:
-            st.warning("🟡 La colonne 'Stock' est absente du fichier.")
-
-        if "Qté Sim 1" in df.columns:
-            colonnes_sim1.append("Qté Sim 1")
-        if "Montant Sim 1" in df.columns:
-            colonnes_sim1.append("Montant Sim 1")
-        colonnes_sim1 += mois_selectionnes
-
         import io
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
-            if colonnes_sim2:
-                try:
-                        df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
-                except:
-                        pass
-            if comparatif is not None:
-                comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
-        
-        if df_sim2 is not None and "Qté Sim 2" in df_sim2.columns:
-            colonnes_sim2.append("Qté Sim 2")
-        if df_sim2 is not None and "Montant Sim 2" in df_sim2.columns:
-            colonnes_sim2.append("Montant Sim 2")
-            colonnes_sim2 += mois_selectionnes
 
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                                                                                                                    st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
+            df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+            if df_sim2 is not None and colonnes_sim2:
+                try:
+                    df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+                except:
+                    pass
+            if comparatif is not None:
+                comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+
+        output.seek(0)
+        st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
+
 
     except Exception as e:
         st.error(f"❌ Erreur : {e}")
