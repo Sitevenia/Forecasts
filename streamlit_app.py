@@ -88,30 +88,7 @@ if uploaded_file:
             total_sim1 = df["Montant Sim 1"].sum()
             st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
             # Export Simulation 1
-            
-        # Sécurisation des colonnes à exporter
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
-
-        if "Stock" in df.columns:
-            colonnes_sim1.append("Stock")
-            colonnes_sim2.append("Stock")
-
-        if "Qté Sim 1" in df.columns:
-            colonnes_sim1.append("Qté Sim 1")
-        if "Montant Sim 1" in df.columns:
-            colonnes_sim1.append("Montant Sim 1")
-
-        if df_sim2 is not None:
-            if "Qté Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Qté Sim 2")
-            if "Montant Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Montant Sim 2")
-
-        colonnes_sim1 += mois_selectionnes
-        colonnes_sim2 += mois_selectionnes
-
-import io
+            import io
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                             output1.seek(0)
@@ -171,39 +148,15 @@ import io
 
             # Export Excel
             
-        
-        # Sécurisation des colonnes à exporter
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
-
-        if "Stock" in df.columns:
-            colonnes_sim1.append("Stock")
-            colonnes_sim2.append("Stock")
-
-        if "Qté Sim 1" in df.columns:
-            colonnes_sim1.append("Qté Sim 1")
-        if "Montant Sim 1" in df.columns:
-            colonnes_sim1.append("Montant Sim 1")
-
-        if df_sim2 is not None:
-            if "Qté Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Qté Sim 2")
-            if "Montant Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Montant Sim 2")
-
-        colonnes_sim1 += mois_selectionnes
-        colonnes_sim2 += mois_selectionnes
-
-import io
+        import io
         output = io.BytesIO()
 
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+
             if df_sim2 is not None and colonnes_sim2:
-                try:
-                    df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
-                except:
-                    pass
+                df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
+
             if comparatif is not None:
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
 
