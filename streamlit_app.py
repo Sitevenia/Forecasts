@@ -1,4 +1,4 @@
-        
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -8,6 +8,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
     """Répartit une quantité totale selon la saisonnalité et ajuste aux conditionnements."""
     if total_qte <= 0 or conditionnement is None or conditionnement <= 0:
         return [0] * len(ventes_n1_mois)
+    pass
 
     total_ventes = sum(ventes_n1_mois)
     if total_ventes == 0:
@@ -42,16 +43,20 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
             st.title("📦 Application de Prévision des Commandes")
 
             def safe_int(x):
-                try:
-                        if pd.isna(x) or not np.isfinite(x):
-                                return 0
                 pass
-                                return int(round(x))
-                except:
-                                return 0
+            try:
+                pass
+            if pd.isna(x) or not np.isfinite(x):
+            return 0
+                pass
+            return int(round(x))
+            except:
+            return 0
 
             def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
+                pass
             try:
+                pass
             if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
             return [0]*12
             saisonnalite = saisonnalite.fillna(0)
