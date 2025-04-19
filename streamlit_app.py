@@ -45,6 +45,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
             try:
             if pd.isna(x) or not np.isfinite(x):
             return 0
+                pass
             return int(round(x))
             except:
             return 0
@@ -67,6 +68,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
             tentative = repartition[idx] + modif
             if tentative >= 0:
                 repartition[idx] = tentative
+                    pass
                 ecart -= modif
             else:
                 break
@@ -80,6 +82,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
             try:
             df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
             st.success("✅ Fichier chargé avec succès.")
+                pass
             month_columns = [str(i) for i in range(1, 13)]
 
         for col in month_columns + ["Tarif d'achat", "Conditionnement"]:
