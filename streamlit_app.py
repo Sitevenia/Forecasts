@@ -143,19 +143,20 @@ if uploaded_file:
 
             df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0).astype(int)
 
-            for i in df_sim2 if "df_sim2" in locals() else None.index:
+            for i in df_sim2.index:
                 repartition = repartir_et_ajuster(
-                    df_sim2 if "df_sim2" in locals() else None.at[i, "Qté Sim 2"],
+                    df_sim2.at[i, "Qté Sim 2"],
                     saisonnalite.loc[i, month_columns],
-                    df_sim2 if "df_sim2" in locals() else None.at[i, "Conditionnement"]
+                    df_sim2.at[i, "Conditionnement"]
                 )
-                df_sim2 if "df_sim2" in locals() else None.loc[i, month_columns] = repartition
+                if "df_sim2" in locals():
+                    df_sim2.loc[i, month_columns] = repartition
 
             df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
             total_sim2 = df_sim2["Montant Sim 2"].sum()
             st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
 
-            st.dataframe(df_sim2 if "df_sim2" in locals() else None[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
+            st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
 
             # Comparatif
             st.subheader("📊 Comparatif")
@@ -170,7 +171,7 @@ if uploaded_file:
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, sheet_name="Simulation_1", index=False)
-                df_sim2 if "df_sim2" in locals() else None.to_excel(writer, sheet_name="Simulation_2", index=False)
+                df_sim2.to_excel(writer, sheet_name="Simulation_2", index=False)
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
             output.seek(0)
             st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
