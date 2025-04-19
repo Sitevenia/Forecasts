@@ -33,7 +33,6 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
             if tentative >= 0:
                 repartition[idx] = tentative
                 ecart -= modif
-            else:
                 break
         return [safe_int(x) for x in repartition]
     except:
@@ -210,7 +209,8 @@ if uploaded_file:
         st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
 
 
-        except Exception as e:
-            st.error(f"❌ Erreur : {e}")
-    else:
+    except Exception as e:
+        st.error(f"❌ Erreur : {e}")
+        st.info("Veuillez charger un fichier pour commencer.")
+if not uploaded_file:
     st.info("Veuillez charger un fichier pour commencer.")
