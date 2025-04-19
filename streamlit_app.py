@@ -43,10 +43,10 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
 
             def safe_int(x):
                 try:
-                if pd.isna(x) or not np.isfinite(x):
-                return 0
+                        if pd.isna(x) or not np.isfinite(x):
+                        return 0
                 pass
-            return int(round(x))
+                        return int(round(x))
             except:
             return 0
 
