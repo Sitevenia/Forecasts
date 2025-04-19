@@ -210,7 +210,7 @@ if uploaded_file:
         st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
 
 
-    except Exception as e:
-        st.error(f"❌ Erreur : {e}")
+        except Exception as e:
+            st.error(f"❌ Erreur : {e}")
     else:
-        st.info("Veuillez charger un fichier pour commencer.")
+    st.info("Veuillez charger un fichier pour commencer.")
