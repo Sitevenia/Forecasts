@@ -33,6 +33,7 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
             if tentative >= 0:
                 repartition[idx] = tentative
                 ecart -= modif
+            else:
                 break
         return [safe_int(x) for x in repartition]
     except:
@@ -87,37 +88,14 @@ if uploaded_file:
             total_sim1 = df["Montant Sim 1"].sum()
             st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
             # Export Simulation 1
-            
-        # Définition des colonnes à exporter
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
-
-        if "Stock" in df.columns:
-            colonnes_sim1.append("Stock")
-            colonnes_sim2.append("Stock")
-
-        if "Qté Sim 1" in df.columns:
-            colonnes_sim1.append("Qté Sim 1")
-        if "Montant Sim 1" in df.columns:
-            colonnes_sim1.append("Montant Sim 1")
-
-        if df_sim2 is not None:
-            if "Qté Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Qté Sim 2")
-            if "Montant Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Montant Sim 2")
-
-        colonnes_sim1 += mois_selectionnes
-        colonnes_sim2 += mois_selectionnes
-
-        import io
-        output1 = io.BytesIO()
-        with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
+            import io
+            output1 = io.BytesIO()
+            with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                             output1.seek(0)
-                            st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
+            st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
 
 
-        repartition = repartir_et_ajuster(
+            repartition = repartir_et_ajuster(
                 df.at[i, "Qté Sim 1"],
                 saisonnalite.loc[i, mois_selectionnes],
                 df.at[i, "Conditionnement"]
@@ -129,14 +107,14 @@ if uploaded_file:
         objectif = st.number_input("🎯 Objectif (€)", value=0.0, step=1000.0)
 
         if objectif > 0:
-                if st.button("▶️ Lancer la Simulation 2"):
-                    df_sim2 = df.copy()
+            if st.button("▶️ Lancer la Simulation 2"):
+                df_sim2 = df.copy()
                 df_sim2["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
                 total_base_value = (df_sim2["Qté Base"] * df_sim2["Tarif d'achat"]).sum()
 
-        best_coef = 1.0
-        best_diff = float("inf")
-        for coef in np.arange(0.01, 2.0, 0.01):
+            best_coef = 1.0
+            best_diff = float("inf")
+            for coef in np.arange(0.01, 2.0, 0.01):
                 q_test = np.ceil((df_sim2["Qté Base"] * coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]
                 montant_test = (q_test * df_sim2["Tarif d'achat"]).sum()
                 diff = abs(montant_test - objectif)
@@ -144,9 +122,9 @@ if uploaded_file:
                     best_diff = diff
                     best_coef = coef
 
-        df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0).astype(int)
+            df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0).astype(int)
 
-        for i in df_sim2.index:
+            for i in df_sim2.index:
                 repartition = repartir_et_ajuster(
                     df_sim2.at[i, "Qté Sim 2"],
                     saisonnalite.loc[i, mois_selectionnes],
@@ -154,55 +132,31 @@ if uploaded_file:
                 )
                 df_sim2.loc[i, month_columns] = repartition
 
-        df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
-        total_sim2 = df_sim2["Montant Sim 2"].sum()
-        st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
+            df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
+            total_sim2 = df_sim2["Montant Sim 2"].sum()
+            st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
 
-        st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
+            st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
 
             # Comparatif
-        st.subheader("📊 Comparatif")
-        comparatif = df[["Référence fournisseur", "Référence produit", "Désignation"]].copy()
-        comparatif["Qté Sim 1"] = df["Qté Sim 1"]
-        comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
-        comparatif["Montant Sim 2"] = df_sim2["Montant Sim 2"]
-        st.dataframe(comparatif)
+            st.subheader("📊 Comparatif")
+            comparatif = df[["Référence fournisseur", "Référence produit", "Désignation"]].copy()
+            comparatif["Qté Sim 1"] = df["Qté Sim 1"]
+            comparatif["Qté Sim 2"] = df_sim2["Qté Sim 2"]
+            comparatif["Montant Sim 2"] = df_sim2["Montant Sim 2"]
+            st.dataframe(comparatif)
 
             # Export Excel
             
-        
-        # Définition des colonnes à exporter
-        colonnes_sim1 = ["Référence fournisseur", "Référence produit", "Désignation"]
-        colonnes_sim2 = ["Référence fournisseur", "Référence produit", "Désignation"]
-
-        if "Stock" in df.columns:
-            colonnes_sim1.append("Stock")
-            colonnes_sim2.append("Stock")
-
-        if "Qté Sim 1" in df.columns:
-            colonnes_sim1.append("Qté Sim 1")
-        if "Montant Sim 1" in df.columns:
-            colonnes_sim1.append("Montant Sim 1")
-
-        if df_sim2 is not None:
-            if "Qté Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Qté Sim 2")
-            if "Montant Sim 2" in df_sim2.columns:
-                colonnes_sim2.append("Montant Sim 2")
-
-        colonnes_sim1 += mois_selectionnes
-        colonnes_sim2 += mois_selectionnes
-
         import io
         output = io.BytesIO()
 
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
-
-            if df_sim2 is not None and colonnes_sim2:
+            if not df.empty:
+                df[colonnes_sim1].to_excel(writer, sheet_name="Simulation_1", index=False)
+            if df_sim2 is not None and not df_sim2.empty:
                 df_sim2[colonnes_sim2].to_excel(writer, sheet_name="Simulation_2", index=False)
-
-            if comparatif is not None:
+            if comparatif is not None and not comparatif.empty:
                 comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
 
         output.seek(0)
@@ -211,6 +165,5 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"❌ Erreur : {e}")
-        st.info("Veuillez charger un fichier pour commencer.")
-if not uploaded_file:
+else:
     st.info("Veuillez charger un fichier pour commencer.")
