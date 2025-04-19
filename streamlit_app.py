@@ -44,7 +44,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
 
             def safe_int(x):
                 pass
-            try:
+                try:
                     pass
                 if pd.isna(x) or not np.isfinite(x):
                 return 0
@@ -55,7 +55,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
 
             def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
                 pass
-            try:
+                try:
                     pass
                 if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
                 return [0]*12
