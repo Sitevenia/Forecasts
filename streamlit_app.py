@@ -1,4 +1,4 @@
-
+        
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -42,9 +42,9 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
             st.title("📦 Application de Prévision des Commandes")
 
             def safe_int(x):
-            try:
+                try:
                 if pd.isna(x) or not np.isfinite(x):
-            return 0
+                return 0
                 pass
             return int(round(x))
             except:
