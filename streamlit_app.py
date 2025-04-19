@@ -127,21 +127,21 @@ if uploaded_file:
 
         if objectif > 0:
             if st.button("▶️ Lancer la Simulation 2"):
-                df_sim2 if "df_sim2" in locals() else None = df.copy()
-                (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
-                total_base_value = ((df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Base"] * (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Tarif d'achat"]).sum()
+                df_sim2 = df.copy()
+                df_sim2 if "df_sim2" in locals() else None["Qté Base"] = df["Total ventes N-1"].replace(0, 1)
+                total_base_value = (df_sim2 if "df_sim2" in locals() else None["Qté Base"] * df_sim2 if "df_sim2" in locals() else None["Tarif d'achat"]).sum()
 
             best_coef = 1.0
             best_diff = float("inf")
             for coef in np.arange(0.01, 2.0, 0.01):
-                q_test = np.ceil(((df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Base"] * coef) / (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Conditionnement"]) * (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Conditionnement"]
-                montant_test = (q_test * (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Tarif d'achat"]).sum()
+                q_test = np.ceil((df_sim2 if "df_sim2" in locals() else None["Qté Base"] * coef) / df_sim2 if "df_sim2" in locals() else None["Conditionnement"]) * df_sim2 if "df_sim2" in locals() else None["Conditionnement"]
+                montant_test = (q_test * df_sim2 if "df_sim2" in locals() else None["Tarif d'achat"]).sum()
                 diff = abs(montant_test - objectif)
                 if montant_test <= objectif and diff < best_diff:
                     best_diff = diff
                     best_coef = coef
 
-            (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Sim 2"] = (np.ceil(((df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Base"] * best_coef) / (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Conditionnement"]) * (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Conditionnement"]).fillna(0).astype(int)
+            df_sim2 if "df_sim2" in locals() else None["Qté Sim 2"] = (np.ceil((df_sim2 if "df_sim2" in locals() else None["Qté Base"] * best_coef) / df_sim2 if "df_sim2" in locals() else None["Conditionnement"]) * df_sim2 if "df_sim2" in locals() else None["Conditionnement"]).fillna(0).astype(int)
 
             for i in df_sim2 if "df_sim2" in locals() else None.index:
                 repartition = repartir_et_ajuster(
@@ -151,18 +151,18 @@ if uploaded_file:
                 )
                 df_sim2 if "df_sim2" in locals() else None.loc[i, month_columns] = repartition
 
-            (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Montant Sim 2"] = (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Sim 2"] * (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Tarif d'achat"]
-            total_sim2 = (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Montant Sim 2"].sum()
+            df_sim2 if "df_sim2" in locals() else None["Montant Sim 2"] = df_sim2 if "df_sim2" in locals() else None["Qté Sim 2"] * df_sim2 if "df_sim2" in locals() else None["Tarif d'achat"]
+            total_sim2 = df_sim2 if "df_sim2" in locals() else None["Montant Sim 2"].sum()
             st.metric("✅ Montant Simulation 2", f"€ {total_sim2:,.2f}")
 
-            st.dataframe((df_sim2 if "df_sim2" in locals() else pd.DataFrame())[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
+            st.dataframe(df_sim2 if "df_sim2" in locals() else None[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
 
             # Comparatif
             st.subheader("📊 Comparatif")
             comparatif = df[["Référence fournisseur", "Référence produit", "Désignation"]].copy()
             comparatif["Qté Sim 1"] = df["Qté Sim 1"]
-            comparatif["Qté Sim 2"] = (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Qté Sim 2"]
-            comparatif["Montant Sim 2"] = (df_sim2 if "df_sim2" in locals() else pd.DataFrame())["Montant Sim 2"]
+            comparatif["Qté Sim 2"] = df_sim2 if "df_sim2" in locals() else None["Qté Sim 2"]
+            comparatif["Montant Sim 2"] = df_sim2 if "df_sim2" in locals() else None["Montant Sim 2"]
             st.dataframe(comparatif)
 
             # Export Excel
