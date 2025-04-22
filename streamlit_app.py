@@ -83,17 +83,24 @@ if uploaded_file and conditionnement_file:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
         st.success("✅ Fichier principal chargé avec succès.")
 
-        # Lire le fichier des conditionnements et vérifier la présence de la colonne "Conditionnements" ou "conditionnements"
-        df_conditionnement = pd.read_excel(conditionnement_file)
-        if "Conditionnements" in df_conditionnement.columns:
-            conditionnement_col = "Conditionnements"
-        elif "conditionnements" in df_conditionnement.columns:
-            conditionnement_col = "conditionnements"
-        else:
+        # Lire toutes les feuilles du fichier des conditionnements
+        xls = pd.ExcelFile(conditionnement_file)
+        df_conditionnement = None
+
+        for sheet_name in xls.sheet_names:
+            sheet_df = pd.read_excel(xls, sheet_name=sheet_name)
+            if "Conditionnements" in sheet_df.columns or "conditionnements" in sheet_df.columns:
+                df_conditionnement = sheet_df
+                break
+
+        if df_conditionnement is None:
             st.error("❌ Erreur : La colonne 'Conditionnements' ou 'conditionnements' n'existe pas dans le fichier des conditionnements.")
             st.stop()
 
         st.success("✅ Fichier des conditionnements chargé avec succès.")
+
+        # Utiliser la colonne "Conditionnements" ou "conditionnements"
+        conditionnement_col = "Conditionnements" if "Conditionnements" in df_conditionnement.columns else "conditionnements"
 
         # Mettre à jour les conditionnements dans le DataFrame principal
         df = df.merge(df_conditionnement[["Référence fournisseur", conditionnement_col]], on="Référence fournisseur", how="left")
