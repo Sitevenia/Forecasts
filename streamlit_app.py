@@ -1,8 +1,16 @@
-
-import streamlit as st
 import pandas as pd
 import numpy as np
+import streamlit as st
+import io
+import openpyxl
 
+def nettoyer(x):
+    try:
+        if pd.isna(x) or not np.isfinite(x):
+            return 0
+        return int(x)
+    except:
+        return 0
 
 def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
     """Répartit une quantité totale selon la saisonnalité et ajuste aux conditionnements."""
