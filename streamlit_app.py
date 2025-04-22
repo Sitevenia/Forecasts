@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import io  # Ajout de l'importation du module io
+import io
 
 def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
     """Répartit une quantité totale selon la saisonnalité et ajuste aux conditionnements."""
@@ -80,13 +80,14 @@ if uploaded_file:
         st.success("✅ Fichier chargé avec succès.")
 
         month_columns = [str(i) for i in range(1, 13)]
+        selected_months = st.multiselect("Sélectionnez les mois à inclure", month_columns, default=month_columns)
 
         for col in month_columns + ["Tarif d'achat", "Conditionnement"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
         df["Conditionnement"] = df["Conditionnement"].replace(0, 1)
-        df["Total ventes N-1"] = df[month_columns].sum(axis=1).replace(0, np.nan)
-        saisonnalite = df[month_columns].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
+        df["Total ventes N-1"] = df[selected_months].sum(axis=1).replace(0, np.nan)
+        saisonnalite = df[selected_months].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
 
         # Simulation 1
         st.subheader("Simulation 1 : progression personnalisée")
@@ -98,10 +99,10 @@ if uploaded_file:
             for i in df.index:
                 repartition = repartir_et_ajuster(
                     df.at[i, "Qté Sim 1"],
-                    saisonnalite.loc[i, month_columns],
+                    saisonnalite.loc[i, selected_months],
                     df.at[i, "Conditionnement"]
                 )
-                df.loc[i, month_columns] = repartition
+                df.loc[i, selected_months] = repartition
 
             df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
             total_sim1 = df["Montant Sim 1"].sum()
@@ -139,10 +140,10 @@ if uploaded_file:
                 for i in df_sim2.index:
                     repartition = repartir_et_ajuster(
                         df_sim2.at[i, "Qté Sim 2"],
-                        saisonnalite.loc[i, month_columns],
+                        saisonnalite.loc[i, selected_months],
                         df_sim2.at[i, "Conditionnement"]
                     )
-                    df_sim2.loc[i, month_columns] = repartition
+                    df_sim2.loc[i, selected_months] = repartition
 
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
