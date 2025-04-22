@@ -78,33 +78,34 @@ uploaded_file = st.file_uploader("📁 Charger le fichier Excel principal", type
 # Chargement du fichier des conditionnements
 conditionnement_file = st.file_uploader("📁 Charger le fichier Excel des conditionnements", type=["xlsx"])
 
-if uploaded_file and conditionnement_file:
+if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
         st.success("✅ Fichier principal chargé avec succès.")
 
-        # Lire toutes les feuilles du fichier des conditionnements
-        xls = pd.ExcelFile(conditionnement_file)
-        df_conditionnement = None
+        if conditionnement_file:
+            # Lire toutes les feuilles du fichier des conditionnements
+            xls = pd.ExcelFile(conditionnement_file)
+            df_conditionnement = None
 
-        for sheet_name in xls.sheet_names:
-            sheet_df = pd.read_excel(xls, sheet_name=sheet_name)
-            if "Conditionnements" in sheet_df.columns or "conditionnements" in sheet_df.columns:
-                df_conditionnement = sheet_df
-                break
+            for sheet_name in xls.sheet_names:
+                sheet_df = pd.read_excel(xls, sheet_name=sheet_name)
+                if "Conditionnements" in sheet_df.columns or "conditionnements" in sheet_df.columns:
+                    df_conditionnement = sheet_df
+                    break
 
-        if df_conditionnement is None:
-            st.error("❌ Erreur : La colonne 'Conditionnements' ou 'conditionnements' n'existe pas dans le fichier des conditionnements.")
-            st.stop()
+            if df_conditionnement is None:
+                st.error("❌ Erreur : La colonne 'Conditionnements' ou 'conditionnements' n'existe pas dans le fichier des conditionnements.")
+                st.stop()
 
-        st.success("✅ Fichier des conditionnements chargé avec succès.")
+            st.success("✅ Fichier des conditionnements chargé avec succès.")
 
-        # Utiliser la colonne "Conditionnements" ou "conditionnements"
-        conditionnement_col = "Conditionnements" if "Conditionnements" in df_conditionnement.columns else "conditionnements"
+            # Utiliser la colonne "Conditionnements" ou "conditionnements"
+            conditionnement_col = "Conditionnements" if "Conditionnements" in df_conditionnement.columns else "conditionnements"
 
-        # Mettre à jour les conditionnements dans le DataFrame principal
-        df = df.merge(df_conditionnement[["Référence fournisseur", conditionnement_col]], on="Référence fournisseur", how="left")
-        df.rename(columns={conditionnement_col: "Conditionnement"}, inplace=True)
+            # Mettre à jour les conditionnements dans le DataFrame principal
+            df = df.merge(df_conditionnement[["Référence fournisseur", conditionnement_col]], on="Référence fournisseur", how="left")
+            df.rename(columns={conditionnement_col: "Conditionnement"}, inplace=True)
 
         month_columns = [str(i) for i in range(1, 13)]
         selected_months = st.multiselect("Sélectionnez les mois à inclure", month_columns, default=month_columns)
@@ -210,11 +211,12 @@ if uploaded_file and conditionnement_file:
                     comparatif_filtered.to_excel(writer, sheet_name="Comparatif", index=False)
 
                     # Ajouter l'onglet des conditionnements
-                    df_conditionnement.to_excel(writer, sheet_name="Conditionnements", index=False)
+                    if df_conditionnement is not None:
+                        df_conditionnement.to_excel(writer, sheet_name="Conditionnements", index=False)
                 output.seek(0)
                 st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
 
     except Exception as e:
         st.error(f"❌ Erreur : {e}")
 else:
-    st.info("Veuillez charger les fichiers pour commencer.")
+    st.info("Veuillez charger le fichier principal pour commencer.")
