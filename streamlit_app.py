@@ -72,12 +72,22 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
     except:
         return [0] * len(saisonnalite)
 
-uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
+# Chargement du fichier principal
+uploaded_file = st.file_uploader("📁 Charger le fichier Excel principal", type=["xlsx"])
 
-if uploaded_file:
+# Chargement du fichier des conditionnements
+conditionnement_file = st.file_uploader("📁 Charger le fichier Excel des conditionnements", type=["xlsx"])
+
+if uploaded_file and conditionnement_file:
     try:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
-        st.success("✅ Fichier chargé avec succès.")
+        st.success("✅ Fichier principal chargé avec succès.")
+
+        df_conditionnement = pd.read_excel(conditionnement_file, sheet_name="Conditionnements")
+        st.success("✅ Fichier des conditionnements chargé avec succès.")
+
+        # Mettre à jour les conditionnements dans le DataFrame principal
+        df = df.merge(df_conditionnement[["Référence fournisseur", "Conditionnement"]], on="Référence fournisseur", how="left")
 
         month_columns = [str(i) for i in range(1, 13)]
         selected_months = st.multiselect("Sélectionnez les mois à inclure", month_columns, default=month_columns)
@@ -181,10 +191,13 @@ if uploaded_file:
 
                     comparatif_filtered = comparatif[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Qté Sim 2", "Montant Sim 2"]]
                     comparatif_filtered.to_excel(writer, sheet_name="Comparatif", index=False)
+
+                    # Ajouter l'onglet des conditionnements
+                    df_conditionnement.to_excel(writer, sheet_name="Conditionnements", index=False)
                 output.seek(0)
                 st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
 
     except Exception as e:
         st.error(f"❌ Erreur : {e}")
 else:
-    st.info("Veuillez charger un fichier pour commencer.")
+    st.info("Veuillez charger les fichiers pour commencer.")
