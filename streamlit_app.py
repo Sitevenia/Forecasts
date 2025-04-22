@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import io  # Ajout de l'importation du module io
 
 def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
     """Répartit une quantité totale selon la saisonnalité et ajuste aux conditionnements."""
@@ -107,7 +108,6 @@ if uploaded_file:
             st.metric("💰 Total Simulation 1", f"€ {total_sim1:,.2f}")
 
             # Export Simulation 1
-            import io
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                 df.to_excel(writer, sheet_name="Simulation_1", index=False)
