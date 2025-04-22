@@ -115,7 +115,9 @@ if uploaded_file:
             # Export Simulation 1
             output1 = io.BytesIO()
             with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
-                df.to_excel(writer, sheet_name="Simulation_1", index=False)
+                # Filtrer les colonnes avant l'exportation
+                df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                df_filtered.to_excel(writer, sheet_name="Simulation_1", index=False)
             output1.seek(0)
             st.download_button("📥 Télécharger Simulation 1", output1, file_name="simulation_1.xlsx")
 
@@ -170,9 +172,15 @@ if uploaded_file:
                 # Export Excel
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                    df.to_excel(writer, sheet_name="Simulation_1", index=False)
-                    df_sim2.to_excel(writer, sheet_name="Simulation_2", index=False)
-                    comparatif.to_excel(writer, sheet_name="Comparatif", index=False)
+                    # Filtrer les colonnes avant l'exportation
+                    df_filtered_sim1 = df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                    df_filtered_sim1.to_excel(writer, sheet_name="Simulation_1", index=False)
+
+                    df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"] + selected_months]
+                    df_filtered_sim2.to_excel(writer, sheet_name="Simulation_2", index=False)
+
+                    comparatif_filtered = comparatif[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Qté Sim 2", "Montant Sim 2"]]
+                    comparatif_filtered.to_excel(writer, sheet_name="Comparatif", index=False)
                 output.seek(0)
                 st.download_button("📥 Télécharger le fichier Excel", output, file_name="forecast_result_final.xlsx")
 
