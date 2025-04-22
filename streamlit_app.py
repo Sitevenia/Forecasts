@@ -50,10 +50,10 @@ def safe_int(x):
 def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
     try:
         if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
-            return [0] * 12
+            return [0] * len(saisonnalite)
         saisonnalite = saisonnalite.fillna(0)
         if saisonnalite.sum() == 0:
-            return [0] * 12
+            return [0] * len(saisonnalite)
         saisonnalite = saisonnalite / saisonnalite.sum()
         raw = qte_totale * saisonnalite
         repartition = np.ceil(raw / conditionnement) * conditionnement
@@ -70,7 +70,7 @@ def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
                 break
         return [safe_int(x) for x in repartition]
     except:
-        return [0] * 12
+        return [0] * len(saisonnalite)
 
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel", type=["xlsx"])
 
@@ -102,7 +102,11 @@ if uploaded_file:
                     saisonnalite.loc[i, selected_months],
                     df.at[i, "Conditionnement"]
                 )
-                df.loc[i, selected_months] = repartition
+                # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
+                if len(repartition) == len(selected_months):
+                    df.loc[i, selected_months] = repartition
+                else:
+                    st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
 
             df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
             total_sim1 = df["Montant Sim 1"].sum()
@@ -143,7 +147,11 @@ if uploaded_file:
                         saisonnalite.loc[i, selected_months],
                         df_sim2.at[i, "Conditionnement"]
                     )
-                    df_sim2.loc[i, selected_months] = repartition
+                    # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
+                    if len(repartition) == len(selected_months):
+                        df_sim2.loc[i, selected_months] = repartition
+                    else:
+                        st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
 
                 df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                 total_sim2 = df_sim2["Montant Sim 2"].sum()
