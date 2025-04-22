@@ -27,30 +27,4 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
         for i in range(len(qtes_conditionnees)):
             if ecart > 0 and qtes_conditionnees[i] >= conditionnement:
                 qtes_conditionnees[i] -= conditionnement
-                ecart -= conditionnement
-            elif ecart < 0:
-                qtes_conditionnees[i] += conditionnement
-                ecart += conditionnement
-            if ecart == 0:
-                break
-
-    return qtes_conditionnees
-
-st.set_page_config(page_title="Forecast App", layout="wide")
-st.title("📦 Application de Prévision des Commandes")
-
-def safe_int(x):
-    try:
-        if pd.isna(x) or not np.isfinite(x):
-            return 0
-        return int(round(x))
-    except:
-        return 0
-
-def repartir_et_ajuster(qte_totale, saisonnalite, conditionnement):
-    try:
-        if not np.isfinite(qte_totale) or qte_totale <= 0 or saisonnalite.isnull().all():
-            return [0] * len(saisonnalite)
-        saisonnalite = saisonnalite.fillna(0)
-        if saisonnalite.sum() == 0:
-         
+               
