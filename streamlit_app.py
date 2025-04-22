@@ -19,7 +19,7 @@ def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
     qtes_mensuelles = [round(total_qte * p) for p in proportions]
 
     # Ajuster chaque mois au multiple de conditionnement
-    qtes_conditionnees = [max(0, int(round(q / conditionnement)) * conditionnement) for q in qtes_mensuelles]
+    qtes_conditionnees = [int(round(q / conditionnement)) * conditionnement for q in qtes_mensuelles]
 
     # Réajuster si trop ou pas assez
     ecart = sum(qtes_conditionnees) - total_qte
