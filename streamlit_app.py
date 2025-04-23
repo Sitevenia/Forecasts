@@ -108,7 +108,7 @@ if uploaded_file:
                     col4.write(row["Stock"])
                     col5.write(row["Qté Sim 1"])
                     col6.write(f"€ {row['Montant Sim 1']:,.2f}")
-                    if col7.button("Voir stats", key=f"btn_{index}"):
+                    if col7.button("Voir stats", key=f"btn_sim1_{index}"):
                         st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
                         st.write(row[selected_months])
 
@@ -177,7 +177,7 @@ if uploaded_file:
                         col4.write(row["Stock"])
                         col5.write(row["Qté Sim 2"])
                         col6.write(f"€ {row['Montant Sim 2']:,.2f}")
-                        if col7.button("Voir stats", key=f"btn_{index}"):
+                        if col7.button("Voir stats", key=f"btn_sim2_{index}"):
                             st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
                             st.write(row[selected_months])
 
