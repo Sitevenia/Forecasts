@@ -112,12 +112,8 @@ if uploaded_file:
                     col3.write(row["Désignation"])
                     col4.write(row["Stock"])
                     col5.write(row["Total ventes N-1 (sélection)"])
-                    new_qte = col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}")
+                    new_qte = col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}", on_change=update_quantity, args=(edited_df, index, "Qté Sim 1", "Montant Sim 1"))
                     col7.write(f"€ {row['Montant Sim 1']:,.2f}")
-
-                    # Mettre à jour les quantités modifiées
-                    edited_df.at[index, "Qté Sim 1"] = new_qte
-                    edited_df.at[index, "Montant Sim 1"] = new_qte * row["Tarif d'achat"]
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
@@ -185,12 +181,8 @@ if uploaded_file:
                         col3.write(row["Désignation"])
                         col4.write(row["Stock"])
                         col5.write(row["Total ventes N-1 (sélection)"])
-                        new_qte = col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}")
+                        new_qte = col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}", on_change=update_quantity, args=(edited_df_sim2, index, "Qté Sim 2", "Montant Sim 2"))
                         col7.write(f"€ {row['Montant Sim 2']:,.2f}")
-
-                        # Mettre à jour les quantités modifiées
-                        edited_df_sim2.at[index, "Qté Sim 2"] = new_qte
-                        edited_df_sim2.at[index, "Montant Sim 2"] = new_qte * row["Tarif d'achat"]
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
@@ -213,3 +205,8 @@ if uploaded_file:
         st.error(f"❌ Erreur : {e}")
 else:
     st.info("Veuillez charger le fichier principal pour commencer.")
+
+def update_quantity(df, index, qte_col, montant_col):
+    new_qte = st.session_state[f"qte_{qte_col}_{index}"]
+    df.at[index, qte_col] = new_qte
+    df.at[index, montant_col] = new_qte * df.at[index, "Tarif d'achat"]
