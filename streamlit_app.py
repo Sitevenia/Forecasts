@@ -91,7 +91,7 @@ if uploaded_file:
                         saisonnalite.loc[i, selected_months],
                         df.at[i, "Conditionnement"]
                     )
-                    # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
+                    # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
                     if len(repartition) == len(selected_months):
                         df.loc[i, selected_months] = repartition
                     else:
@@ -101,25 +101,15 @@ if uploaded_file:
                 total_sim1 = df["Montant Sim 1"].sum()
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
 
-                # Afficher les résultats avec des champs de saisie pour modifier les quantités
+                # Afficher les résultats dans un tableau
                 st.write("### Résultats de la Simulation Simple")
-                edited_df = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months].copy()
-
-                for index, row in edited_df.iterrows():
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                    col1.write(row["Référence fournisseur"])
-                    col2.write(row["Référence produit"])
-                    col3.write(row["Désignation"])
-                    col4.write(row["Stock"])
-                    col5.write(row["Total ventes N-1 (sélection)"])
-                    new_qte = col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}", on_change=update_quantity, args=(edited_df, index, "Qté Sim 1", "Montant Sim 1"))
-                    col7.write(f"€ {row['Montant Sim 1']:,.2f}")
+                st.dataframe(df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months])
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
                 with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                     # Filtrer les colonnes avant l'exportation
-                    df_filtered = edited_df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months]
                     df_filtered.to_excel(writer, sheet_name="Simulation_simple", index=False)
 
                     # Ajouter une ligne pour le montant total
@@ -160,7 +150,7 @@ if uploaded_file:
                             saisonnalite.loc[i, selected_months],
                             df_sim2.at[i, "Conditionnement"]
                         )
-                        # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
+                        # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
                         if len(repartition) == len(selected_months):
                             df_sim2.loc[i, selected_months] = repartition
                         else:
@@ -170,25 +160,15 @@ if uploaded_file:
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
-                    # Afficher les résultats avec des champs de saisie pour modifier les quantités
+                    # Afficher les résultats dans un tableau
                     st.write("### Résultats de la Simulation avec Objectif de Montant")
-                    edited_df_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months].copy()
-
-                    for index, row in edited_df_sim2.iterrows():
-                        col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                        col1.write(row["Référence fournisseur"])
-                        col2.write(row["Référence produit"])
-                        col3.write(row["Désignation"])
-                        col4.write(row["Stock"])
-                        col5.write(row["Total ventes N-1 (sélection)"])
-                        new_qte = col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}", on_change=update_quantity, args=(edited_df_sim2, index, "Qté Sim 2", "Montant Sim 2"))
-                        col7.write(f"€ {row['Montant Sim 2']:,.2f}")
+                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months])
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
                     with pd.ExcelWriter(output2, engine="xlsxwriter") as writer:
                         # Filtrer les colonnes avant l'exportation
-                        df_filtered_sim2 = edited_df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months]
+                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months]
                         df_filtered_sim2.to_excel(writer, sheet_name="Simulation_objectif", index=False)
 
                         # Ajouter une ligne pour le montant total
