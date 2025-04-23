@@ -16,7 +16,7 @@ def safe_int(x):
 
 def ajuster_quantites(qte, conditionnement):
     """Ajuste les quantités pour qu'elles soient des multiples du conditionnement."""
-    return int(np.round(qte / conditionnement) * conditionnement)
+    return int(np.round(qte / conditionnement) * conditionnement) if not pd.isna(qte) else 0
 
 # Sélection du type de simulation au démarrage
 simulation_type = st.selectbox("Sélectionnez le type de simulation", ["Simulation simple", "Simulation avec objectif de montant"])
@@ -104,7 +104,7 @@ if uploaded_file:
                             best_diff = diff
                             best_coef = coef
 
-                    df_sim2["Qté Sim 2"] = (df_sim2["Qté Base"] * best_coef).fillna(0).astype(int)
+                    df_sim2["Qté Sim 2"] = (df_sim2["Qté Base"] * best_coef).fillna(0)
 
                     for i in df_sim2.index:
                         repartition = df_sim2.at[i, "Qté Sim 2"] * saisonnalite.loc[i, selected_months]
