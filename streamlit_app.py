@@ -78,9 +78,6 @@ if uploaded_file:
         # Ajouter une colonne pour les quantités totales vendues en N-1 sur les mois sélectionnés
         df["Total ventes N-1 (sélection)"] = df[selected_months].sum(axis=1)
 
-        # Ajouter une option pour prendre en compte le stock actuel
-        prendre_en_compte_stock = st.checkbox("Prendre en compte le stock actuel")
-
         if simulation_type == "Simulation simple":
             st.subheader("Simulation simple : progression personnalisée")
             progression = st.number_input("📈 Progression (%)", value=0.0, step=1.0)
@@ -99,9 +96,6 @@ if uploaded_file:
                         df.loc[i, selected_months] = repartition
                     else:
                         st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
-
-                if prendre_en_compte_stock:
-                    df["Qté Sim 1"] = np.minimum(df["Qté Sim 1"], df["Stock"])
 
                 df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
                 total_sim1 = df["Montant Sim 1"].sum()
@@ -171,9 +165,6 @@ if uploaded_file:
                             df_sim2.loc[i, selected_months] = repartition
                         else:
                             st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
-
-                    if prendre_en_compte_stock:
-                        df_sim2["Qté Sim 2"] = np.minimum(df_sim2["Qté Sim 2"], df_sim2["Stock"])
 
                     df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
