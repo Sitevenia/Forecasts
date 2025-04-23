@@ -205,8 +205,3 @@ if uploaded_file:
         st.error(f"❌ Erreur : {e}")
 else:
     st.info("Veuillez charger le fichier principal pour commencer.")
-
-def update_quantity(df, index, qte_col, montant_col):
-    new_qte = st.session_state[f"qte_{qte_col}_{index}"]
-    df.at[index, qte_col] = new_qte
-    df.at[index, montant_col] = new_qte * df.at[index, "Tarif d'achat"]
