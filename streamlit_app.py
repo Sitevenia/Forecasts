@@ -58,7 +58,7 @@ if uploaded_file:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
         st.success("✅ Fichier principal chargé avec succès.")
 
-        # Vérifiez si la colonne "Stock" existe et la convertir en numérique si nécessaire
+        # Vérifier si la colonne "Stock" existe et la convertir en numérique si nécessaire
         if "Stock" in df.columns:
             df["Stock"] = pd.to_numeric(df["Stock"], errors="coerce").fillna(0)
         else:
