@@ -47,6 +47,9 @@ def safe_int(x):
     except:
         return 0
 
+# Sélection du type de simulation au démarrage
+simulation_type = st.selectbox("Sélectionnez le type de simulation", ["Simulation simple", "Simulation avec objectif de montant"])
+
 # Chargement du fichier principal
 uploaded_file = st.file_uploader("📁 Charger le fichier Excel principal", type=["xlsx"])
 
@@ -64,9 +67,6 @@ if uploaded_file:
         df["Conditionnement"] = df["Conditionnement"].replace(0, 1)
         df["Total ventes N-1"] = df[selected_months].sum(axis=1).replace(0, np.nan)
         saisonnalite = df[selected_months].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
-
-        # Sélection du type de simulation
-        simulation_type = st.selectbox("Sélectionnez le type de simulation", ["Simulation simple", "Simulation avec objectif de montant"])
 
         if simulation_type == "Simulation simple":
             st.subheader("Simulation simple : progression personnalisée")
