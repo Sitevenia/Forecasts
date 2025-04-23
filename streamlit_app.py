@@ -50,13 +50,7 @@ if uploaded_file:
             df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
 
             if st.button("▶️ Lancer la Simulation simple"):
-                for i in df.index:
-                    repartition = df.at[i, "Qté Sim 1"] * saisonnalite.loc[i, selected_months]
-                    # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
-                    if len(repartition) == len(selected_months):
-                        df.loc[i, selected_months] = repartition
-                    else:
-                        st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
+                df[selected_months] = df["Qté Sim 1"].values[:, None] * saisonnalite[selected_months].values
 
                 df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
                 total_sim1 = df["Montant Sim 1"].sum()
@@ -105,13 +99,7 @@ if uploaded_file:
 
                     df_sim2["Qté Sim 2"] = (df_sim2["Qté Base"] * best_coef).fillna(0).astype(int)
 
-                    for i in df_sim2.index:
-                        repartition = df_sim2.at[i, "Qté Sim 2"] * saisonnalite.loc[i, selected_months]
-                        # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
-                        if len(repartition) == len(selected_months):
-                            df_sim2.loc[i, selected_months] = repartition
-                        else:
-                            st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
+                    df_sim2[selected_months] = df_sim2["Qté Sim 2"].values[:, None] * saisonnalite[selected_months].values
 
                     df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
