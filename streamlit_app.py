@@ -104,6 +104,13 @@ if uploaded_file:
                     # Filtrer les colonnes avant l'exportation
                     df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 1", "Montant Sim 1"] + selected_months]
                     df_filtered.to_excel(writer, sheet_name="Simulation_simple", index=False)
+
+                    # Ajouter une ligne pour le montant total
+                    worksheet = writer.sheets["Simulation_simple"]
+                    last_row = len(df_filtered)
+                    worksheet.write(last_row + 1, df_filtered.columns.get_loc("Montant Sim 1"), "Total")
+                    worksheet.write_formula(last_row + 1, df_filtered.columns.get_loc("Montant Sim 1") + 1, f"=SUM(G2:G{last_row + 1})")
+
                 output1.seek(0)
                 st.download_button("📥 Télécharger Simulation simple", output1, file_name="simulation_simple.xlsx")
 
@@ -153,6 +160,13 @@ if uploaded_file:
                         # Filtrer les colonnes avant l'exportation
                         df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 2", "Montant Sim 2"] + selected_months]
                         df_filtered_sim2.to_excel(writer, sheet_name="Simulation_objectif", index=False)
+
+                        # Ajouter une ligne pour le montant total
+                        worksheet = writer.sheets["Simulation_objectif"]
+                        last_row = len(df_filtered_sim2)
+                        worksheet.write(last_row + 1, df_filtered_sim2.columns.get_loc("Montant Sim 2"), "Total")
+                        worksheet.write_formula(last_row + 1, df_filtered_sim2.columns.get_loc("Montant Sim 2") + 1, f"=SUM(G2:G{last_row + 1})")
+
                     output2.seek(0)
                     st.download_button("📥 Télécharger Simulation avec objectif de montant", output2, file_name="simulation_objectif.xlsx")
 
