@@ -75,6 +75,9 @@ if uploaded_file:
         df["Total ventes N-1"] = df[selected_months].sum(axis=1).replace(0, np.nan)
         saisonnalite = df[selected_months].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
 
+        # Ajouter une colonne pour les quantités totales vendues en N-1 sur les mois sélectionnés
+        df["Total ventes N-1 (sélection)"] = df[selected_months].sum(axis=1)
+
         if simulation_type == "Simulation simple":
             st.subheader("Simulation simple : progression personnalisée")
             progression = st.number_input("📈 Progression (%)", value=0.0, step=1.0)
@@ -97,9 +100,6 @@ if uploaded_file:
                 df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
                 total_sim1 = df["Montant Sim 1"].sum()
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
-
-                # Ajouter une colonne pour les quantités totales vendues en N-1
-                df["Total ventes N-1 (sélection)"] = df[selected_months].sum(axis=1)
 
                 # Afficher les résultats dans un tableau
                 st.write("### Résultats de la Simulation Simple")
@@ -159,9 +159,6 @@ if uploaded_file:
                     df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
-
-                    # Ajouter une colonne pour les quantités totales vendues en N-1
-                    df_sim2["Total ventes N-1 (sélection)"] = df_sim2[selected_months].sum(axis=1)
 
                     # Afficher les résultats dans un tableau
                     st.write("### Résultats de la Simulation avec Objectif de Montant")
