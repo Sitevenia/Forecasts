@@ -99,6 +99,7 @@ if uploaded_file:
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
 
                 # Afficher les résultats avec un bouton pour chaque ligne
+                st.write("### Résultats de la Simulation Simple")
                 for index, row in df.iterrows():
                     col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
                     col1.write(row["Référence fournisseur"])
@@ -167,6 +168,7 @@ if uploaded_file:
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
                     # Afficher les résultats avec un bouton pour chaque ligne
+                    st.write("### Résultats de la Simulation avec Objectif de Montant")
                     for index, row in df_sim2.iterrows():
                         col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
                         col1.write(row["Référence fournisseur"])
