@@ -15,8 +15,10 @@ def safe_int(x):
         return 0
 
 def ajuster_quantites(qte, conditionnement):
-    """Ajuste les quantités pour qu'elles soient des multiples du conditionnement."""
-    return int(np.round(qte / conditionnement) * conditionnement) if not pd.isna(qte) else 0
+    """Ajuste les quantités pour qu'elles soient des multiples entiers du conditionnement."""
+    if pd.isna(qte) or conditionnement == 0:
+        return 0
+    return int(np.round(qte / conditionnement) * conditionnement)
 
 # Sélection du type de simulation au démarrage
 simulation_type = st.selectbox("Sélectionnez le type de simulation", ["Simulation simple", "Simulation avec objectif de montant"])
