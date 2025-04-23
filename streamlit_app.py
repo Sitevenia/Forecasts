@@ -91,7 +91,7 @@ if uploaded_file:
                         saisonnalite.loc[i, selected_months],
                         df.at[i, "Conditionnement"]
                     )
-                    # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
+                    # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
                     if len(repartition) == len(selected_months):
                         df.loc[i, selected_months] = repartition
                     else:
@@ -160,7 +160,7 @@ if uploaded_file:
                             saisonnalite.loc[i, selected_months],
                             df_sim2.at[i, "Conditionnement"]
                         )
-                        # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
+                        # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
                         if len(repartition) == len(selected_months):
                             df_sim2.loc[i, selected_months] = repartition
                         else:
