@@ -98,32 +98,18 @@ if uploaded_file:
                 total_sim1 = df["Montant Sim 1"].sum()
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
 
-                # Afficher les résultats avec un bouton pour chaque ligne
+                # Afficher les résultats avec les statistiques de ventes N-1
                 st.write("### Résultats de la Simulation Simple")
                 for index, row in df.iterrows():
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                    col1.write(row["Référence fournisseur"])
-                    col2.write(row["Référence produit"])
-                    col3.write(row["Désignation"])
-                    col4.write(row["Stock"])
-                    col5.write(row["Qté Sim 1"])
-                    col6.write(f"€ {row['Montant Sim 1']:,.2f}")
-                    if col7.button("Voir stats", key=f"btn_sim1_{index}"):
-                        stats_data = row[selected_months].to_dict()
-                        stats_html = "<table><tr><th>Mois</th><th>Ventes N-1</th></tr>"
-                        for month in selected_months:
-                            stats_html += f"<tr><td>{month}</td><td>{stats_data[month]}</td></tr>"
-                        stats_html += "</table>"
-                        open_script = f"""
-                        <script type="text/javascript">
-                        function openStatsWindow() {{
-                            var statsWindow = window.open("", "Stats Window", "width=400,height=300");
-                            statsWindow.document.write(`{stats_html}`);
-                        }}
-                        openStatsWindow();
-                        </script>
-                        """
-                        st.markdown(open_script, unsafe_allow_html=True)
+                    st.write(f"**{row['Désignation']}**")
+                    st.write(f"Référence fournisseur: {row['Référence fournisseur']}")
+                    st.write(f"Référence produit: {row['Référence produit']}")
+                    st.write(f"Stock: {row['Stock']}")
+                    st.write(f"Quantité Sim 1: {row['Qté Sim 1']}")
+                    st.write(f"Montant Sim 1: € {row['Montant Sim 1']:,.2f}")
+                    st.write("**Stats de ventes N-1:**")
+                    st.write(row[selected_months])
+                    st.write("---")
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
@@ -180,32 +166,18 @@ if uploaded_file:
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
-                    # Afficher les résultats avec un bouton pour chaque ligne
+                    # Afficher les résultats avec les statistiques de ventes N-1
                     st.write("### Résultats de la Simulation avec Objectif de Montant")
                     for index, row in df_sim2.iterrows():
-                        col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                        col1.write(row["Référence fournisseur"])
-                        col2.write(row["Référence produit"])
-                        col3.write(row["Désignation"])
-                        col4.write(row["Stock"])
-                        col5.write(row["Qté Sim 2"])
-                        col6.write(f"€ {row['Montant Sim 2']:,.2f}")
-                        if col7.button("Voir stats", key=f"btn_sim2_{index}"):
-                            stats_data = row[selected_months].to_dict()
-                            stats_html = "<table><tr><th>Mois</th><th>Ventes N-1</th></tr>"
-                            for month in selected_months:
-                                stats_html += f"<tr><td>{month}</td><td>{stats_data[month]}</td></tr>"
-                            stats_html += "</table>"
-                            open_script = f"""
-                            <script type="text/javascript">
-                            function openStatsWindow() {{
-                                var statsWindow = window.open("", "Stats Window", "width=400,height=300");
-                                statsWindow.document.write(`{stats_html}`);
-                            }}
-                            openStatsWindow();
-                            </script>
-                            """
-                            st.markdown(open_script, unsafe_allow_html=True)
+                        st.write(f"**{row['Désignation']}**")
+                        st.write(f"Référence fournisseur: {row['Référence fournisseur']}")
+                        st.write(f"Référence produit: {row['Référence produit']}")
+                        st.write(f"Stock: {row['Stock']}")
+                        st.write(f"Quantité Sim 2: {row['Qté Sim 2']}")
+                        st.write(f"Montant Sim 2: € {row['Montant Sim 2']:,.2f}")
+                        st.write("**Stats de ventes N-1:**")
+                        st.write(row[selected_months])
+                        st.write("---")
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
