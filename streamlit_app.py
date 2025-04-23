@@ -98,24 +98,18 @@ if uploaded_file:
                 total_sim1 = df["Montant Sim 1"].sum()
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
 
-                # Afficher les résultats avec les statistiques de ventes N-1
+                # Ajouter une colonne pour les quantités totales vendues en N-1
+                df["Total ventes N-1 (sélection)"] = df[selected_months].sum(axis=1)
+
+                # Afficher les résultats dans un tableau
                 st.write("### Résultats de la Simulation Simple")
-                for index, row in df.iterrows():
-                    st.write(f"**{row['Désignation']}**")
-                    st.write(f"Référence fournisseur: {row['Référence fournisseur']}")
-                    st.write(f"Référence produit: {row['Référence produit']}")
-                    st.write(f"Stock: {row['Stock']}")
-                    st.write(f"Quantité Sim 1: {row['Qté Sim 1']}")
-                    st.write(f"Montant Sim 1: € {row['Montant Sim 1']:,.2f}")
-                    st.write("**Stats de ventes N-1:**")
-                    st.write(row[selected_months])
-                    st.write("---")
+                st.dataframe(df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months])
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
                 with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                     # Filtrer les colonnes avant l'exportation
-                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months]
                     df_filtered.to_excel(writer, sheet_name="Simulation_simple", index=False)
 
                     # Ajouter une ligne pour le montant total
@@ -123,7 +117,7 @@ if uploaded_file:
                     last_row = len(df_filtered)
                     montant_col = df_filtered.columns.get_loc("Montant Sim 1")
                     worksheet.write(last_row + 1, montant_col, "Total")
-                    worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(F2:F{last_row + 2})")
+                    worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(G2:G{last_row + 2})")
 
                 output1.seek(0)
                 st.download_button("📥 Télécharger Simulation simple", output1, file_name="simulation_simple.xlsx")
@@ -166,24 +160,18 @@ if uploaded_file:
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
-                    # Afficher les résultats avec les statistiques de ventes N-1
+                    # Ajouter une colonne pour les quantités totales vendues en N-1
+                    df_sim2["Total ventes N-1 (sélection)"] = df_sim2[selected_months].sum(axis=1)
+
+                    # Afficher les résultats dans un tableau
                     st.write("### Résultats de la Simulation avec Objectif de Montant")
-                    for index, row in df_sim2.iterrows():
-                        st.write(f"**{row['Désignation']}**")
-                        st.write(f"Référence fournisseur: {row['Référence fournisseur']}")
-                        st.write(f"Référence produit: {row['Référence produit']}")
-                        st.write(f"Stock: {row['Stock']}")
-                        st.write(f"Quantité Sim 2: {row['Qté Sim 2']}")
-                        st.write(f"Montant Sim 2: € {row['Montant Sim 2']:,.2f}")
-                        st.write("**Stats de ventes N-1:**")
-                        st.write(row[selected_months])
-                        st.write("---")
+                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months])
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
                     with pd.ExcelWriter(output2, engine="xlsxwriter") as writer:
                         # Filtrer les colonnes avant l'exportation
-                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 2", "Montant Sim 2"] + selected_months]
+                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months]
                         df_filtered_sim2.to_excel(writer, sheet_name="Simulation_objectif", index=False)
 
                         # Ajouter une ligne pour le montant total
@@ -191,7 +179,7 @@ if uploaded_file:
                         last_row = len(df_filtered_sim2)
                         montant_col = df_filtered_sim2.columns.get_loc("Montant Sim 2")
                         worksheet.write(last_row + 1, montant_col, "Total")
-                        worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(F2:F{last_row + 2})")
+                        worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(G2:G{last_row + 2})")
 
                     output2.seek(0)
                     st.download_button("📥 Télécharger Simulation avec objectif de montant", output2, file_name="simulation_objectif.xlsx")
