@@ -108,8 +108,9 @@ if uploaded_file:
                     # Ajouter une ligne pour le montant total
                     worksheet = writer.sheets["Simulation_simple"]
                     last_row = len(df_filtered)
-                    worksheet.write(last_row + 1, df_filtered.columns.get_loc("Montant Sim 1"), "Total")
-                    worksheet.write_formula(last_row + 1, df_filtered.columns.get_loc("Montant Sim 1") + 1, f"=SUM(G2:G{last_row + 1})")
+                    montant_col = df_filtered.columns.get_loc("Montant Sim 1")
+                    worksheet.write(last_row + 1, montant_col, "Total")
+                    worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(F2:F{last_row + 2})")
 
                 output1.seek(0)
                 st.download_button("📥 Télécharger Simulation simple", output1, file_name="simulation_simple.xlsx")
@@ -164,8 +165,9 @@ if uploaded_file:
                         # Ajouter une ligne pour le montant total
                         worksheet = writer.sheets["Simulation_objectif"]
                         last_row = len(df_filtered_sim2)
-                        worksheet.write(last_row + 1, df_filtered_sim2.columns.get_loc("Montant Sim 2"), "Total")
-                        worksheet.write_formula(last_row + 1, df_filtered_sim2.columns.get_loc("Montant Sim 2") + 1, f"=SUM(G2:G{last_row + 1})")
+                        montant_col = df_filtered_sim2.columns.get_loc("Montant Sim 2")
+                        worksheet.write(last_row + 1, montant_col, "Total")
+                        worksheet.write_formula(last_row + 1, montant_col + 1, f"=SUM(F2:F{last_row + 2})")
 
                     output2.seek(0)
                     st.download_button("📥 Télécharger Simulation avec objectif de montant", output2, file_name="simulation_objectif.xlsx")
