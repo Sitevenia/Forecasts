@@ -58,6 +58,13 @@ if uploaded_file:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
         st.success("✅ Fichier principal chargé avec succès.")
 
+        # Vérifiez si la colonne "Stock" existe et la convertir en numérique si nécessaire
+        if "Stock" in df.columns:
+            df["Stock"] = pd.to_numeric(df["Stock"], errors="coerce").fillna(0)
+        else:
+            st.error("La colonne 'Stock' n'existe pas dans le fichier principal.")
+            st.stop()
+
         month_columns = [str(i) for i in range(1, 13)]
         selected_months = st.multiselect("Sélectionnez les mois à inclure", month_columns, default=month_columns)
 
@@ -95,7 +102,7 @@ if uploaded_file:
                 output1 = io.BytesIO()
                 with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                     # Filtrer les colonnes avant l'exportation
-                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 1", "Montant Sim 1"] + selected_months]
                     df_filtered.to_excel(writer, sheet_name="Simulation_simple", index=False)
                 output1.seek(0)
                 st.download_button("📥 Télécharger Simulation simple", output1, file_name="simulation_simple.xlsx")
@@ -138,13 +145,13 @@ if uploaded_file:
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
-                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"]])
+                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 2", "Montant Sim 2"]])
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
                     with pd.ExcelWriter(output2, engine="xlsxwriter") as writer:
                         # Filtrer les colonnes avant l'exportation
-                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Qté Sim 2", "Montant Sim 2"] + selected_months]
+                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 2", "Montant Sim 2"] + selected_months]
                         df_filtered_sim2.to_excel(writer, sheet_name="Simulation_objectif", index=False)
                     output2.seek(0)
                     st.download_button("📥 Télécharger Simulation avec objectif de montant", output2, file_name="simulation_objectif.xlsx")
