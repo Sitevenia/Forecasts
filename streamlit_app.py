@@ -112,14 +112,12 @@ if uploaded_file:
                     col3.write(row["Désignation"])
                     col4.write(row["Stock"])
                     col5.write(row["Total ventes N-1 (sélection)"])
-                    col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}")
+                    new_qte = col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}")
                     col7.write(f"€ {row['Montant Sim 1']:,.2f}")
 
-                # Mettre à jour les quantités modifiées
-                for index, row in edited_df.iterrows():
-                    edited_qte = st.session_state[f"qte_sim1_{index}"]
-                    edited_df.at[index, "Qté Sim 1"] = edited_qte
-                    edited_df.at[index, "Montant Sim 1"] = edited_qte * row["Tarif d'achat"]
+                    # Mettre à jour les quantités modifiées
+                    edited_df.at[index, "Qté Sim 1"] = new_qte
+                    edited_df.at[index, "Montant Sim 1"] = new_qte * row["Tarif d'achat"]
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
@@ -187,14 +185,12 @@ if uploaded_file:
                         col3.write(row["Désignation"])
                         col4.write(row["Stock"])
                         col5.write(row["Total ventes N-1 (sélection)"])
-                        col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}")
+                        new_qte = col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}")
                         col7.write(f"€ {row['Montant Sim 2']:,.2f}")
 
-                    # Mettre à jour les quantités modifiées
-                    for index, row in edited_df_sim2.iterrows():
-                        edited_qte = st.session_state[f"qte_sim2_{index}"]
-                        edited_df_sim2.at[index, "Qté Sim 2"] = edited_qte
-                        edited_df_sim2.at[index, "Montant Sim 2"] = edited_qte * row["Tarif d'achat"]
+                        # Mettre à jour les quantités modifiées
+                        edited_df_sim2.at[index, "Qté Sim 2"] = new_qte
+                        edited_df_sim2.at[index, "Montant Sim 2"] = new_qte * row["Tarif d'achat"]
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
