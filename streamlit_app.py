@@ -109,8 +109,21 @@ if uploaded_file:
                     col5.write(row["Qté Sim 1"])
                     col6.write(f"€ {row['Montant Sim 1']:,.2f}")
                     if col7.button("Voir stats", key=f"btn_sim1_{index}"):
-                        st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
-                        st.write(row[selected_months])
+                        stats_data = row[selected_months].to_dict()
+                        stats_html = "<table><tr><th>Mois</th><th>Ventes N-1</th></tr>"
+                        for month in selected_months:
+                            stats_html += f"<tr><td>{month}</td><td>{stats_data[month]}</td></tr>"
+                        stats_html += "</table>"
+                        open_script = f"""
+                        <script type="text/javascript">
+                        function openStatsWindow() {{
+                            var statsWindow = window.open("", "Stats Window", "width=400,height=300");
+                            statsWindow.document.write(`{stats_html}`);
+                        }}
+                        openStatsWindow();
+                        </script>
+                        """
+                        st.markdown(open_script, unsafe_allow_html=True)
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
@@ -178,8 +191,21 @@ if uploaded_file:
                         col5.write(row["Qté Sim 2"])
                         col6.write(f"€ {row['Montant Sim 2']:,.2f}")
                         if col7.button("Voir stats", key=f"btn_sim2_{index}"):
-                            st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
-                            st.write(row[selected_months])
+                            stats_data = row[selected_months].to_dict()
+                            stats_html = "<table><tr><th>Mois</th><th>Ventes N-1</th></tr>"
+                            for month in selected_months:
+                                stats_html += f"<tr><td>{month}</td><td>{stats_data[month]}</td></tr>"
+                            stats_html += "</table>"
+                            open_script = f"""
+                            <script type="text/javascript">
+                            function openStatsWindow() {{
+                                var statsWindow = window.open("", "Stats Window", "width=400,height=300");
+                                statsWindow.document.write(`{stats_html}`);
+                            }}
+                            openStatsWindow();
+                            </script>
+                            """
+                            st.markdown(open_script, unsafe_allow_html=True)
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
