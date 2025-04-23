@@ -85,8 +85,6 @@ if uploaded_file:
             st.subheader("Simulation simple : progression personnalisée")
             progression = st.number_input("📈 Progression (%)", value=0.0, step=1.0)
             df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
-            if prendre_en_compte_stock:
-                df["Qté Sim 1"] = np.minimum(df["Qté Sim 1"], df["Stock"])
             df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).fillna(0).astype(int)
 
             if st.button("▶️ Lancer la Simulation simple"):
@@ -101,6 +99,9 @@ if uploaded_file:
                         df.loc[i, selected_months] = repartition
                     else:
                         st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
+
+                if prendre_en_compte_stock:
+                    df["Qté Sim 1"] = np.minimum(df["Qté Sim 1"], df["Stock"])
 
                 df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
                 total_sim1 = df["Montant Sim 1"].sum()
@@ -158,8 +159,6 @@ if uploaded_file:
                             best_coef = coef
 
                     df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0).astype(int)
-                    if prendre_en_compte_stock:
-                        df_sim2["Qté Sim 2"] = np.minimum(df_sim2["Qté Sim 2"], df_sim2["Stock"])
 
                     for i in df_sim2.index:
                         repartition = repartir_et_ajuster(
@@ -172,6 +171,9 @@ if uploaded_file:
                             df_sim2.loc[i, selected_months] = repartition
                         else:
                             st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
+
+                    if prendre_en_compte_stock:
+                        df_sim2["Qté Sim 2"] = np.minimum(df_sim2["Qté Sim 2"], df_sim2["Stock"])
 
                     df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
