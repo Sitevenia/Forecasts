@@ -98,6 +98,19 @@ if uploaded_file:
                 total_sim1 = df["Montant Sim 1"].sum()
                 st.metric("💰 Total Simulation simple", f"€ {total_sim1:,.2f}")
 
+                # Afficher les résultats avec un bouton pour chaque ligne
+                for index, row in df.iterrows():
+                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
+                    col1.write(row["Référence fournisseur"])
+                    col2.write(row["Référence produit"])
+                    col3.write(row["Désignation"])
+                    col4.write(row["Stock"])
+                    col5.write(row["Qté Sim 1"])
+                    col6.write(f"€ {row['Montant Sim 1']:,.2f}")
+                    if col7.button("Voir stats", key=f"btn_{index}"):
+                        st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
+                        st.write(row[selected_months])
+
                 # Export Simulation simple
                 output1 = io.BytesIO()
                 with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
@@ -153,7 +166,18 @@ if uploaded_file:
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
                     st.metric("✅ Montant Simulation avec objectif de montant", f"€ {total_sim2:,.2f}")
 
-                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Qté Sim 2", "Montant Sim 2"]])
+                    # Afficher les résultats avec un bouton pour chaque ligne
+                    for index, row in df_sim2.iterrows():
+                        col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
+                        col1.write(row["Référence fournisseur"])
+                        col2.write(row["Référence produit"])
+                        col3.write(row["Désignation"])
+                        col4.write(row["Stock"])
+                        col5.write(row["Qté Sim 2"])
+                        col6.write(f"€ {row['Montant Sim 2']:,.2f}")
+                        if col7.button("Voir stats", key=f"btn_{index}"):
+                            st.write(f"**Stats de ventes N-1 pour {row['Désignation']}**")
+                            st.write(row[selected_months])
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
