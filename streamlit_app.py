@@ -3,39 +3,6 @@ import pandas as pd
 import numpy as np
 import io
 
-def repartir_et_ajuster(total_qte, ventes_n1_mois, conditionnement):
-    """Répartit une quantité totale selon la saisonnalité et ajuste aux conditionnements."""
-    if total_qte <= 0 or conditionnement is None or conditionnement <= 0:
-        return [0] * len(ventes_n1_mois)
-
-    total_ventes = sum(ventes_n1_mois)
-    if total_ventes == 0:
-        repartition = [1] * len(ventes_n1_mois)
-        total_ventes = len(ventes_n1_mois)
-    else:
-        repartition = ventes_n1_mois
-
-    proportions = [v / total_ventes for v in repartition]
-    qtes_mensuelles = [round(total_qte * p) for p in proportions]
-
-    # Ajuster chaque mois au multiple de conditionnement
-    qtes_conditionnees = [int(round(q / conditionnement)) * conditionnement for q in qtes_mensuelles]
-
-    # Réajuster si trop ou pas assez
-    ecart = sum(qtes_conditionnees) - total_qte
-    while ecart != 0:
-        for i in range(len(qtes_conditionnees)):
-            if ecart > 0 and qtes_conditionnees[i] >= conditionnement:
-                qtes_conditionnees[i] -= conditionnement
-                ecart -= conditionnement
-            elif ecart < 0:
-                qtes_conditionnees[i] += conditionnement
-                ecart += conditionnement
-            if ecart == 0:
-                break
-
-    return qtes_conditionnees
-
 st.set_page_config(page_title="Forecast App", layout="wide")
 st.title("📦 Application de Prévision des Commandes")
 
@@ -58,7 +25,7 @@ if uploaded_file:
         df = pd.read_excel(uploaded_file, sheet_name="Tableau final")
         st.success("✅ Fichier principal chargé avec succès.")
 
-        # Vérifier si la colonne "Stock" existe et la convertir en numérique si nécessaire
+        # Vérifiez si la colonne "Stock" existe et la convertir en numérique si nécessaire
         if "Stock" in df.columns:
             df["Stock"] = pd.to_numeric(df["Stock"], errors="coerce").fillna(0)
         else:
@@ -68,40 +35,28 @@ if uploaded_file:
         month_columns = [str(i) for i in range(1, 13)]
         selected_months = st.multiselect("Sélectionnez les mois à inclure", month_columns, default=month_columns)
 
-        for col in month_columns + ["Tarif d'achat", "Conditionnement"]:
+        for col in month_columns + ["Tarif d'achat"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        df["Conditionnement"] = df["Conditionnement"].replace(0, 1)
         df["Total ventes N-1"] = df[selected_months].sum(axis=1).replace(0, np.nan)
         saisonnalite = df[selected_months].div(df["Total ventes N-1"], axis=0).replace([np.inf, -np.inf], 0).fillna(0)
 
         # Ajouter une colonne pour les quantités totales vendues en N-1 sur les mois sélectionnés
         df["Total ventes N-1 (sélection)"] = df[selected_months].sum(axis=1)
 
-        # Ajouter une option pour prendre en compte le stock actuel
-        prendre_en_compte_stock = st.checkbox("Prendre en compte le stock actuel")
-
         if simulation_type == "Simulation simple":
             st.subheader("Simulation simple : progression personnalisée")
             progression = st.number_input("📈 Progression (%)", value=0.0, step=1.0)
             df["Qté Sim 1"] = df["Total ventes N-1"] * (1 + progression / 100)
-            df["Qté Sim 1"] = (np.ceil(df["Qté Sim 1"] / df["Conditionnement"]) * df["Conditionnement"]).fillna(0).astype(int)
 
             if st.button("▶️ Lancer la Simulation simple"):
                 for i in df.index:
-                    repartition = repartir_et_ajuster(
-                        df.at[i, "Qté Sim 1"],
-                        saisonnalite.loc[i, selected_months],
-                        df.at[i, "Conditionnement"]
-                    )
-                    # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
+                    repartition = df.at[i, "Qté Sim 1"] * saisonnalite.loc[i, selected_months]
+                    # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
                     if len(repartition) == len(selected_months):
                         df.loc[i, selected_months] = repartition
                     else:
                         st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
-
-                if prendre_en_compte_stock:
-                    df["Qté Sim 1"] = np.minimum(df["Qté Sim 1"], df["Stock"])
 
                 df["Montant Sim 1"] = df["Qté Sim 1"] * df["Tarif d'achat"]
                 total_sim1 = df["Montant Sim 1"].sum()
@@ -109,23 +64,13 @@ if uploaded_file:
 
                 # Afficher les résultats dans un tableau
                 st.write("### Résultats de la Simulation Simple")
-                edited_df = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months].copy()
-
-                for index, row in edited_df.iterrows():
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                    col1.write(row["Référence fournisseur"])
-                    col2.write(row["Référence produit"])
-                    col3.write(row["Désignation"])
-                    col4.write(row["Stock"])
-                    col5.write(row["Total ventes N-1 (sélection)"])
-                    new_qte = col6.number_input("Qté Sim 1", min_value=0, value=row["Qté Sim 1"], key=f"qte_sim1_{index}", on_change=update_quantity, args=(edited_df, index, "Qté Sim 1", "Montant Sim 1"))
-                    col7.write(f"€ {row['Montant Sim 1']:,.2f}")
+                st.dataframe(df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months])
 
                 # Export Simulation simple
                 output1 = io.BytesIO()
                 with pd.ExcelWriter(output1, engine="xlsxwriter") as writer:
                     # Filtrer les colonnes avant l'exportation
-                    df_filtered = edited_df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months]
+                    df_filtered = df[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 1", "Montant Sim 1"] + selected_months]
                     df_filtered.to_excel(writer, sheet_name="Simulation_simple", index=False)
 
                     # Ajouter une ligne pour le montant total
@@ -151,29 +96,22 @@ if uploaded_file:
                     best_coef = 1.0
                     best_diff = float("inf")
                     for coef in np.arange(0.01, 2.0, 0.01):
-                        q_test = np.ceil((df_sim2["Qté Base"] * coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]
+                        q_test = df_sim2["Qté Base"] * coef
                         montant_test = (q_test * df_sim2["Tarif d'achat"]).sum()
                         diff = abs(montant_test - objectif)
                         if montant_test <= objectif and diff < best_diff:
                             best_diff = diff
                             best_coef = coef
 
-                    df_sim2["Qté Sim 2"] = (np.ceil((df_sim2["Qté Base"] * best_coef) / df_sim2["Conditionnement"]) * df_sim2["Conditionnement"]).fillna(0).astype(int)
+                    df_sim2["Qté Sim 2"] = (df_sim2["Qté Base"] * best_coef).fillna(0).astype(int)
 
                     for i in df_sim2.index:
-                        repartition = repartir_et_ajuster(
-                            df_sim2.at[i, "Qté Sim 2"],
-                            saisonnalite.loc[i, selected_months],
-                            df_sim2.at[i, "Conditionnement"]
-                        )
-                        # Assurez-vous que la longueur de répartition correspond à celle des colonnes sélectionnées
+                        repartition = df_sim2.at[i, "Qté Sim 2"] * saisonnalite.loc[i, selected_months]
+                        # Assurez-vous que la longueur de repartition correspond à celle des colonnes sélectionnées
                         if len(repartition) == len(selected_months):
                             df_sim2.loc[i, selected_months] = repartition
                         else:
                             st.error("Erreur : La longueur de la répartition ne correspond pas aux mois sélectionnés.")
-
-                    if prendre_en_compte_stock:
-                        df_sim2["Qté Sim 2"] = np.minimum(df_sim2["Qté Sim 2"], df_sim2["Stock"])
 
                     df_sim2["Montant Sim 2"] = df_sim2["Qté Sim 2"] * df_sim2["Tarif d'achat"]
                     total_sim2 = df_sim2["Montant Sim 2"].sum()
@@ -181,23 +119,13 @@ if uploaded_file:
 
                     # Afficher les résultats dans un tableau
                     st.write("### Résultats de la Simulation avec Objectif de Montant")
-                    edited_df_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months].copy()
-
-                    for index, row in edited_df_sim2.iterrows():
-                        col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 2, 2, 1, 1, 1, 1])
-                        col1.write(row["Référence fournisseur"])
-                        col2.write(row["Référence produit"])
-                        col3.write(row["Désignation"])
-                        col4.write(row["Stock"])
-                        col5.write(row["Total ventes N-1 (sélection)"])
-                        new_qte = col6.number_input("Qté Sim 2", min_value=0, value=row["Qté Sim 2"], key=f"qte_sim2_{index}", on_change=update_quantity, args=(edited_df_sim2, index, "Qté Sim 2", "Montant Sim 2"))
-                        col7.write(f"€ {row['Montant Sim 2']:,.2f}")
+                    st.dataframe(df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months])
 
                     # Export Simulation avec objectif de montant
                     output2 = io.BytesIO()
                     with pd.ExcelWriter(output2, engine="xlsxwriter") as writer:
                         # Filtrer les colonnes avant l'exportation
-                        df_filtered_sim2 = edited_df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months]
+                        df_filtered_sim2 = df_sim2[["Référence fournisseur", "Référence produit", "Désignation", "Stock", "Total ventes N-1 (sélection)", "Qté Sim 2", "Montant Sim 2"] + selected_months]
                         df_filtered_sim2.to_excel(writer, sheet_name="Simulation_objectif", index=False)
 
                         # Ajouter une ligne pour le montant total
@@ -214,8 +142,3 @@ if uploaded_file:
         st.error(f"❌ Erreur : {e}")
 else:
     st.info("Veuillez charger le fichier principal pour commencer.")
-
-def update_quantity(df, index, qte_col, montant_col):
-    new_qte = st.session_state[f"qte_{qte_col}_{index}"]
-    df.at[index, qte_col] = new_qte
-    df.at[index, montant_col] = new_qte * df.at[index, "Tarif d'achat"]
